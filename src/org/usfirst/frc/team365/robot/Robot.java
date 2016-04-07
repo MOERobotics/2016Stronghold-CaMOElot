@@ -24,8 +24,7 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
  * directory.
  */
 public class Robot extends IterativeRobot implements PIDOutput {
-
-//	 CameraServer server;
+	//	 CameraServer server;
 	AHRS navX;
 
 	CANTalon driveLA = new CANTalon(12);
@@ -74,6 +73,7 @@ public class Robot extends IterativeRobot implements PIDOutput {
 	int autoStep;
 	int loopCount;
 	int autoRoutine;
+	int autoRoutineDash, autoRoutineFile;
 	int turnCount;
 	int floorCount;
 	boolean shooterOn;
@@ -190,6 +190,7 @@ public class Robot extends IterativeRobot implements PIDOutput {
 		// SmartDashboard.putNumber("KD", .04);
 		SmartDashboard.putNumber("autoChoice", 0);
 		SmartDashboard.putNumber("Moat", 0);
+		SmartDashboard.putNumber("AutoFileChoice", 0);
 
 		angleController = new PIDController(0.03, 0.0005, 0.5, navX, this);
 		angleController.setContinuous();
@@ -241,7 +242,8 @@ public class Robot extends IterativeRobot implements PIDOutput {
 		
 		if(!funStick.getTrigger()&&pastButton1F)
 		{
-			autoFile.writeAutoFile();
+			autoFile.writeAutoFile((int)SmartDashboard.getNumber("AutoFileChoice"));
+			autoRoutineFile=autoFile.readAutoFile();
 		}
 
 		if (disabledLoop % 25 == 0) {
@@ -277,11 +279,12 @@ public class Robot extends IterativeRobot implements PIDOutput {
 
 			//double chooseAuto = SmartDashboard.getNumber("autoChoice");
 			//autoRoutine = (int) chooseAuto;
+			autoRoutineDash=(int)SmartDashboard.getNumber("autoChoice");
 			
 			moat=(int)(SmartDashboard.getNumber("Moat"));
 			
-			SmartDashboard.putNumber("AutoFile", getAuto());
-			SmartDashboard.putString("AutoAck/Nak", getAuto() != 0 ? "Ack" : "Nak");
+			SmartDashboard.putNumber("AutoFile", autoRoutineFile);
+			SmartDashboard.putString("AutoAck/Nak", autoRoutineFile != 0 ? "Ack" : "Nak");
 			
 			//autoRoutine=getAuto();
 
@@ -290,7 +293,7 @@ public class Robot extends IterativeRobot implements PIDOutput {
 	}
 
 	public void teleopInit() {
-		AutoData.safeSave(autoData);
+		AutoData.safeSave(autoData);// the nominal delay shouldn't be an issue here
 		
 		teleopLoop = 0;
 		shooterOn = false;
@@ -563,13 +566,18 @@ public class Robot extends IterativeRobot implements PIDOutput {
 		rollOffset = navX.getRoll();
 		onTape = 0;
 		autoData=new AutoData(autoRoutine);
+		
+		if(autoRoutineDash!=0) autoRoutine=autoRoutineDash;
+		else if(autoRoutineFile!=0) autoRoutine=autoRoutineFile;
+		else autoRoutine=0;
+		
 	}
 
 	public void autonomousPeriodic() {
 		autoLoop++;
 		loopCount++;
 		// autoTestRoutine();
-autoRoutine = 1;
+		//autoRoutine = 1;
 		switch (autoRoutine) {
 		case 1:
 			lowBarAutoHigh();
@@ -1171,18 +1179,6 @@ autoRoutine = 1;
 		if(Math.abs(dy)>closeEnoughY)
 			shootAngle.set(dy);
 		else	shootAngle.set(0);
-	}
-	
-	public int getAuto()
-	{
-		int choice=NAK;
-		//try the smartdashboard
-		choice=(int)SmartDashboard.getNumber("autoChoice");
-		//if a nak is returned check the serialized file
-		if(choice==NAK)
-			choice = autoFile.readAutoFile();
-		//return the choice even if it is still nak
-		return choice;
 	}
 	
 	public void serializeAutoData()

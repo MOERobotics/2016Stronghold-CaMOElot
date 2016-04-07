@@ -1,8 +1,7 @@
 package org.usfirst.frc.team365.robot;
 
-import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileWriter;
+import java.io.FileOutputStream;
 import java.util.Date;
 
 public class AutoData
@@ -31,9 +30,9 @@ public class AutoData
 		try
 		{
 			File file=new File("/home/lvuser/AutoData.txt");
-			file.delete();file.createNewFile();
-			FileWriter fw=new FileWriter(file);
-			BufferedWriter bw=new BufferedWriter(fw);
+			file.delete();
+			file.createNewFile();
+			FileOutputStream fos = new FileOutputStream(file);
 			String text=""+timestamp();
 			text+="AutoChoice: "+autoChoice+"\n";
 			text+="ShooterAngle: "+shooterAngle+"\n";
@@ -43,8 +42,8 @@ public class AutoData
 			text+="Yaw: "+yaw+"\n";
 			text+="Pitch: "+pitch+"\n";
 			text+="Roll: "+roll+"\n";
-			bw.write(text);
-			bw.close();
+			fos.write(text.getBytes());
+			fos.close();
 			return true;
 		}
 		catch(Exception e)

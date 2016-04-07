@@ -1,10 +1,10 @@
 package org.usfirst.frc.team365.robot;
 
 import java.io.BufferedReader;
-import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.FileReader;
-import java.io.FileWriter;
+import java.io.IOException;
 
 public class AutoFile
 {
@@ -13,21 +13,27 @@ public class AutoFile
 	static boolean open;
 	
 	
-	private int getChoice() throws Exception
+	public void fileConfirm() throws IOException
 	{
-		String str=javax.swing.JOptionPane.showInputDialog("Write the Auto Choice");
-		return Integer.parseInt(str);
+		if(file.exists())
+		{
+			file.delete();
+		}
+		file.mkdirs();
+		file.createNewFile();
 	}
-	public void writeAutoFile()
+	public void writeAutoFile(int choice)
 	{
 		try
 		{
 			if(open)
 			{
 				open=false;
-				BufferedWriter bw=new BufferedWriter(new FileWriter(file));
-				bw.write(""+getChoice());
-				bw.close();
+				fileConfirm();
+				
+				FileOutputStream fos = new FileOutputStream(file);
+				fos.write(choice);
+				fos.close();
 				open=true;
 			}
 			else
