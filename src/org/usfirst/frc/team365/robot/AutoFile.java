@@ -15,11 +15,11 @@ public class AutoFile
 	
 	public void fileConfirm() throws IOException
 	{
+		file.mkdirs();
 		if(file.exists())
 		{
 			file.delete();
 		}
-		file.mkdirs();
 		file.createNewFile();
 	}
 	public void writeAutoFile(int choice)
