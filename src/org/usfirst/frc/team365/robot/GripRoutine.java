@@ -18,13 +18,15 @@ public class GripRoutine
 		targetY=HEIGHT/2+yOff;
 		table=NetworkTable.getTable("GRIP");
 	}
-	public DualTransfer<Double, Double> analyze()
+	public Box analyze()
 	{
-		DualTransfer<Double, Double>send=new DualTransfer<>(0.0,0.0);
+		//DualTransfer<Double, Double>send=new DualTransfer<>(0.0,0.0);
 		ITable it=table.getSubTable("myContoursReport");
 		double[]areas=it.getNumberArray("area", new double[]{-1});
 		double[]xVals=it.getNumberArray("centerX",new double[]{});
 		double[]yVals=it.getNumberArray("centerY",new double[]{});
+		double[]wVals=it.getNumberArray("width",new double[]{});
+		double[]hVals=it.getNumberArray("height",new double[]{});
 		double pastArea=-1;
 		int index=-1;
 		for(int n=0;n<areas.length;n++)
@@ -40,10 +42,9 @@ public class GripRoutine
 			//proportional differences in x&y from -1 to 1
 			double dx=(xVals[index]-targetX)/WIDTH;	
 			double dy=(yVals[index]-targetY)/HEIGHT;
-			send.setArg1(dx);
-			send.setArg2(dy);
+			return new Box(dx,dy,wVals[index],hVals[index]);
 		}
-		return send;
+		return new Box(0,0,0,0);
 		
 	}
 }

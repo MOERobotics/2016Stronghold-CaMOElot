@@ -1170,9 +1170,9 @@ public class Robot extends IterativeRobot implements PIDOutput {
 	
 	public void gripAdjust()
 	{
-		DualTransfer<Double, Double>delta2d=grip.analyze();
-		double dx=delta2d.getArg1();	
-		double dy=delta2d.getArg2();
+		Box box=grip.analyze();
+		double dx=box.getX();	
+		double dy=box.getY();
 		if(Math.abs(dx)>closeEnoughX)
 			driveRobot(dx,-dx);
 		else	driveRobot(0,0);
