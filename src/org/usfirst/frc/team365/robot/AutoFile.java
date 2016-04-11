@@ -30,7 +30,6 @@ public class AutoFile
 			{
 				open=false;
 				fileConfirm();
-				
 				FileOutputStream fos = new FileOutputStream(file);
 				fos.write(choice);
 				fos.close();

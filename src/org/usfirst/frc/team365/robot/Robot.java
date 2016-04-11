@@ -4,6 +4,7 @@ import com.kauailabs.navx.frc.AHRS;
 
 import edu.wpi.first.wpilibj.AnalogInput;
 import edu.wpi.first.wpilibj.CANTalon;
+import edu.wpi.first.wpilibj.CameraServer;
 import edu.wpi.first.wpilibj.Counter;
 import edu.wpi.first.wpilibj.CounterBase.EncodingType;
 import edu.wpi.first.wpilibj.DigitalInput;
@@ -24,7 +25,7 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
  * directory.
  */
 public class Robot extends IterativeRobot implements PIDOutput {
-	//	 CameraServer server;
+		 CameraServer server;
 	AHRS navX;
 
 	CANTalon driveLA = new CANTalon(12);
@@ -150,13 +151,16 @@ public class Robot extends IterativeRobot implements PIDOutput {
 	
 	public Robot() {
 		
-//		  server = CameraServer.getInstance(); 
-//		  server.setSize(1);
-//		  server.setQuality(50); 
-//		  server.startAutomaticCapture("cam1");
+		try
+		{
+			server = CameraServer.getInstance(); 
+			server.setSize(1);
+			server.setQuality(50); 
+			server.startAutomaticCapture("cam1");
+		}
+		catch(Exception e){}
 		
 		grip=new GripRoutine(cameraOffsetX,cameraOffsetY);
-		 
 		navX = new AHRS(SPI.Port.kMXP, (byte) 50);
 	}
 
@@ -1171,8 +1175,10 @@ public class Robot extends IterativeRobot implements PIDOutput {
 	public void gripAdjust()
 	{
 		Box box=grip.analyze();
-		double dx=box.getX();	
+		double dx=box.getX();
 		double dy=box.getY();
+	//	double h=box.getH();
+	//	double w=box.getW();
 		if(Math.abs(dx)>closeEnoughX)
 			driveRobot(dx,-dx);
 		else	driveRobot(0,0);

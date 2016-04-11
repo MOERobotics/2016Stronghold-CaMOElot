@@ -38,5 +38,5 @@ public class Udp implements Runnable
 		}
 		socket.close();
 	}
-
+	public synchronized String getData(){return lastData;}
 }

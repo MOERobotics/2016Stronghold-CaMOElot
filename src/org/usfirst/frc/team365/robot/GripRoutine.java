@@ -42,6 +42,7 @@ public class GripRoutine
 			//proportional differences in x&y from -1 to 1
 			double dx=(xVals[index]-targetX)/WIDTH;	
 			double dy=(yVals[index]-targetY)/HEIGHT;
+			//width and height are not proportioned
 			return new Box(dx,dy,wVals[index],hVals[index]);
 		}
 		return new Box(0,0,0,0);
