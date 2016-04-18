@@ -6,11 +6,13 @@ import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.IOException;
 
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+
 public class AutoFile
 {
 	final static String PATH="/home/lvuser/AutoChoice.txt";
 	File file=new File(PATH);
-	static boolean open;
+	static boolean open=true;
 	
 	
 	public void fileConfirm() throws IOException
@@ -22,7 +24,7 @@ public class AutoFile
 		}
 		file.createNewFile();
 	}
-	public void writeAutoFile(int choice)
+	public void writeAutoFile(String choice)
 	{
 		try
 		{
@@ -31,7 +33,7 @@ public class AutoFile
 				open=false;
 				fileConfirm();
 				FileOutputStream fos = new FileOutputStream(file);
-				fos.write(choice);
+				fos.write(choice.getBytes());
 				fos.close();
 				open=true;
 			}	

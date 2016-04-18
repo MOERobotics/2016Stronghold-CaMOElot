@@ -5,10 +5,13 @@ import java.net.DatagramSocket;
 import java.net.SocketException;
 import java.nio.ByteBuffer;
 
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+
 public class Udp implements Runnable
 {
 	static final short noneFound=1, oneFound=2, twoFound=3;
 	static final int port=5801;
+	static final double width=320,height=240;
 	volatile int lastID;
 	DatagramSocket socket;
 	protected volatile boolean more=true;
@@ -44,19 +47,19 @@ public class Udp implements Runnable
 				{
 					case twoFound:
 					{
-						double l=buf.getDouble();
-						double r=buf.getDouble();
+						double x=buf.getDouble();
+						double y=buf.getDouble();
 						double w=buf.getDouble();
 						double h=buf.getDouble();
-						boxes[1]=new Box(l,r,w,h);
+						boxes[1]=new Box(width*(x+w/2),height*(y+h/2),w,h);
 					}
 					case oneFound:
 					{
-						double l=buf.getDouble();
-						double r=buf.getDouble();
+						double x=buf.getDouble();
+						double y=buf.getDouble();
 						double w=buf.getDouble();
 						double h=buf.getDouble();
-						boxes[0]=new Box(l,r,w,h);
+						boxes[0]=new Box(width*(x+w/2),height*(y+h/2),width*w,height*h);
 					}
 					case noneFound:
 					{
@@ -64,13 +67,12 @@ public class Udp implements Runnable
 					}
 				}
 				for(byte n=0;n<boxes.length;n++)
+				{
 					if(boxes[n]!=null)
-						System.out.print(boxes[n].toString());
-				System.out.println();
-//				byte[]data=packet.getData();
-//				lastData=new String(data, 0, packet.getLength());
-//				System.out.println(lastData);
-				
+					{
+						SmartDashboard.putNumber("x-"+n, boxes[n].getX());
+					}
+				}
 			}
 			catch(Exception e)
 			{
