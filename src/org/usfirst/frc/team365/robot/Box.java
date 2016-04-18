@@ -14,4 +14,8 @@ public class Box
 	public double getY(){return y;}
 	public double getW(){return w;}
 	public double getH(){return h;}
+	public String toString()
+	{
+		return ""+x+", "+y+", "+w+", "+h+"; ";
+	}
 }
