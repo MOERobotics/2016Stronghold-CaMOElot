@@ -63,3 +63,4 @@ $RECYCLE.BIN/
 *.lnk
 /build/
 /dist/
+/bin/
