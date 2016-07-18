@@ -1,8 +1,8 @@
 package org.usfirst.frc.team365.robot;
 
-import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileWriter;
+import java.io.FileOutputStream;
+import java.util.Date;
 
 public class AutoData
 {
@@ -19,27 +19,45 @@ public class AutoData
 	{
 		this.autoChoice=autoChoice;
 	}
+	public static boolean safeSave(AutoData ad)
+	{
+		if(ad!=null)
+			return ad.save();
+		else return false;
+	}
 	public boolean save()
 	{
 		try
 		{
 			File file=new File("/home/lvuser/AutoData.txt");
-			file.delete();file.createNewFile();
-			FileWriter fw=new FileWriter(file);
-			BufferedWriter bw=new BufferedWriter(fw);
-			bw.write("AutoChoice: "+autoChoice);bw.newLine();
-			bw.write("ShooterAngle: "+shooterAngle);bw.newLine();
-			bw.write("ArmAngle: "+armAngle);bw.newLine();
-			bw.write("PowerA: "+powerA);bw.newLine();
-			bw.write("PowerB: "+powerB);bw.newLine();
-			bw.write("Yaw: "+yaw);bw.newLine();
-			bw.write("Pitch: "+pitch);bw.newLine();
-			bw.write("Roll: "+roll);
+			file.delete();
+			file.createNewFile();
+			FileOutputStream fos = new FileOutputStream(file);
+			String text=""+timestamp();
+			text+="AutoChoice: "+autoChoice+"\n";
+			text+="ShooterAngle: "+shooterAngle+"\n";
+			text+="ArmAngle: "+armAngle+"\n";
+			text+="PowerA: "+powerA+"\n";
+			text+="PowerB: "+powerB+"\n";
+			text+="Yaw: "+yaw+"\n";
+			text+="Pitch: "+pitch+"\n";
+			text+="Roll: "+roll+"\n";
+			fos.write(text.getBytes());
+			fos.close();
 			return true;
 		}
 		catch(Exception e)
 		{
 			return false;
+		}
+	}
+	public static String timestamp()
+	{
+		try{
+			Date d=new Date(System.currentTimeMillis());
+			return d.toString()+"\n";
+		}catch(Exception e){
+			return "DFLT TimeStamp\n";
 		}
 	}
 }
