@@ -20,7 +20,6 @@ public class GripRoutine
 	}
 	public Box analyze()
 	{
-		//DualTransfer<Double, Double>send=new DualTransfer<>(0.0,0.0);
 		ITable it=table.getSubTable("myContoursReport");
 		double[]areas=it.getNumberArray("area", new double[]{-1});
 		double[]xVals=it.getNumberArray("centerX",new double[]{});

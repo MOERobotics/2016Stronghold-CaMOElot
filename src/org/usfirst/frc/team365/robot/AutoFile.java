@@ -34,12 +34,11 @@ public class AutoFile
 				fos.write(choice);
 				fos.close();
 				open=true;
-			}
-			else
-				throw new Exception();
+			}	
 		}
 		catch(Exception e)
 		{
+			e.printStackTrace();
 			System.out.println("Failed File Write");
 		}
 	}
