@@ -1,16 +1,10 @@
 package org.usfirst.frc.team365.robot;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileReader;
-import java.io.IOException;
 import java.net.SocketException;
 
 import com.kauailabs.navx.frc.AHRS;
 
 import edu.wpi.first.wpilibj.AnalogInput;
-//import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
-import edu.wpi.first.wpilibj.CameraServer;
 //import edu.wpi.first.wpilibj.SPI;
 import edu.wpi.first.wpilibj.CANTalon;
 import edu.wpi.first.wpilibj.Counter;
@@ -128,6 +122,10 @@ public class Robot extends IterativeRobot implements PIDOutput {
 	double seeTapeDist;
 	double wallDist;
 	double lowBarDist;
+	double deltaAz;
+	double deltaTurn;
+	double azTarget;
+	double startAzimuth;
 //	double sonarDist;
 	// double PIDKP;
 	// double PIDKI;
@@ -166,7 +164,7 @@ public class Robot extends IterativeRobot implements PIDOutput {
 	final static int NAK=0;
 	AutoData autoData;
 	
-	
+	final static boolean AUTO_TARGETING_USE_UDP=false;
 
 	public Robot() {
 		
@@ -452,6 +450,7 @@ public class Robot extends IterativeRobot implements PIDOutput {
 			pictureAnalysis();
 		}
 		*/
+		/*
 		if (pidContOn) {
 
 			if (driveStick.getTrigger()) {
@@ -515,8 +514,10 @@ public class Robot extends IterativeRobot implements PIDOutput {
 			defenseStep = 1;
 			
 		}
+		*/
 		
-		 else if (newButton3D) { // programmed turn routine to 0 degrees
+//		 else 
+			 if (newButton3D) { // programmed turn routine to 0 degrees
 			if (!pastButton3D) {
 				lastOffYaw = 0;
 				turnSum = 0;
@@ -558,21 +559,35 @@ public class Robot extends IterativeRobot implements PIDOutput {
 		else if (newButton5D) {
 			if(!pastButton5D) {
 				startYaw=navX.getYaw();
+				startAzimuth = launchAngle.getAverageVoltage();
 				turnSum = 0;
 				lastOffYaw = 0;
 			}
 			if(analyzePicture) {
 
-				double deltaAngle = pictureAnalysis(124);
+				double deltaAngle = pictureAnalysis(141,82);
 				SmartDashboard.putNumber("deltaAngle",deltaAngle);
 				if (foundTarget) {
-					if (deltaAngle > 0) turnToAngle = startYaw + deltaAngle + 0.5;
-					else turnToAngle = startYaw - deltaAngle - 0.5;
+					if (deltaAngle > 0) {
+						turnToAngle = startYaw - deltaAngle + 0.75;
+						
+					}
+					else {
+						turnToAngle = startYaw - deltaAngle - 0.75;
+					}
+					azTarget = startAzimuth + deltaAz;
+					SmartDashboard.putNumber("azTarget", azTarget);
 				}
-				else turnToAngle = startYaw;
+				else {
+					turnToAngle = startYaw;
+					azTarget = startAzimuth;
+					
+				}
 			}
-
+			System.out.println(turnToAngle);
 			turnRobot(turnToAngle);
+			SmartDashboard.putNumber("azTarget", azTarget);
+			setShooterAngle(azTarget);
 		}
 		else {
 			// Drive robot with one joystick
@@ -964,11 +979,14 @@ public class Robot extends IterativeRobot implements PIDOutput {
 
 	void controlCollector() {
 		if (funStick.getRawButton(2)) { // run collector to bring balls in
-			collector.set(0.8);
+//			collector.set(0.8);
 			if (ballSensor.get()) {
 				ballControl.set(1.0); // use 0.5 on real bot
-			} else
+				collector.set(0.8);
+			} else {
 				ballControl.set(0);
+				collector.set(0);
+			}
 		} else if (funStick.getRawButton(3)) { // run collector to push balls out
 			if (funStick.getTrigger()) {
 				collector.set(-1.0);
@@ -1011,17 +1029,20 @@ public class Robot extends IterativeRobot implements PIDOutput {
 //		else if (funStick.getRawButton(10))
 //			setShooterAngle(shooterOuterWorks);
 
-//		else 
+		//		else 
+		if (!driveStick.getRawButton(5))  {
 			if (funStick.getRawButton(6)) { // want steeper shoot angle
-		// if (launchAngle.getAverageVoltage() < 2.3) shootAngle.set(0);
-		// else
-			shootAngle.set(-0.5);
-		} else if (funStick.getRawButton(7)) { // want shallower shoot angle
-		// if (launchAngle.getAverageVoltage() > 4.0) shootAngle.set(0);
-		// else
-			shootAngle.set(0.5);
-		} else
-			shootAngle.set(0);
+				// if (launchAngle.getAverageVoltage() < 2.3) shootAngle.set(0);
+				// else
+				shootAngle.set(-0.4);
+			} else if (funStick.getRawButton(7)) { // want shallower shoot angle
+				// if (launchAngle.getAverageVoltage() > 4.0) shootAngle.set(0);
+				// else
+				shootAngle.set(0.4);
+			} else
+				shootAngle.set(0);
+
+		}
 	}
 
 	void setShooterAngle(double setAngle) {
@@ -1087,7 +1108,7 @@ public class Robot extends IterativeRobot implements PIDOutput {
 			else if (offYaw < 0) turnSum = 0.0;
 			else turnSum = 0;
 		}
-		if (offYaw > 1.0 || offYaw < -1.0) {
+		if (offYaw > 0.6 || offYaw < -0.6) {
 
 			if (offYaw < 20 && offYaw > -20) {
 				if (offYaw > 0)
@@ -1155,7 +1176,7 @@ public class Robot extends IterativeRobot implements PIDOutput {
 			}
 			break;
 		case 4:
-			if (currentRoll > (rollOffset - 0.7)) {
+			if (currentRoll > (rollOffset - 1.5)) {
 				floorCount++;
 				if (floorCount == 2) {
 					defenseStep = 5;
@@ -1270,14 +1291,13 @@ public class Robot extends IterativeRobot implements PIDOutput {
 		}
 	}
 	
-	double pictureAnalysis(double xTarget)
+	double pictureAnalysis(double xTarget,double yTarget)
 	{
-		//return gripAnalysis(xTarget);
-		return udpAnalysis(xTarget);
+		return AUTO_TARGETING_USE_UDP?udpAnalysis(xTarget,yTarget):gripAnalysis(xTarget,yTarget);
 		
 	}
 	
-	double udpAnalysis(double xTarget)//640x480
+	double udpAnalysis(double xTarget,double yTarget)//640x480
 	{
 		
 		Box[]boxes=udpVision.getData();
@@ -1297,17 +1317,19 @@ public class Robot extends IterativeRobot implements PIDOutput {
 		{
 			analyzePicture=false;
 			foundTarget = true;
-			return (xTarget-boxes[indx].getX())/5;
+			deltaAz =	-(yTarget-boxes[indx].getY())/150.;
+			return 		 (xTarget-boxes[indx].getX())/4.4;
 		}
 		foundTarget=false;
 		return 0;
 	}
 	
-	double gripAnalysis(double xTarget)
+	double gripAnalysis(double xTarget, double yTarget)
 	{
 		ITable it=table.getSubTable("myContoursReport");
 		double []areas=it.getNumberArray("area", new double[]{-1});
 		double []xVals=it.getNumberArray("centerX",new double[]{});
+		double []yVals=it.getNumberArray("centerY",new double[]{});
 		double pastArea = -1;
 		int indx = -1;
 		//find greatest area
@@ -1327,7 +1349,8 @@ public class Robot extends IterativeRobot implements PIDOutput {
 		{
 			analyzePicture=false;
 			foundTarget = true;
-			return (xTarget-xVals[indx])/5;
+			deltaAz= 	-(yTarget-yVals[indx])/150.;
+			return 		 (xTarget-xVals[indx])/4.4;
 		}
 		foundTarget = false;
 		return 0;
@@ -1342,7 +1365,7 @@ public class Robot extends IterativeRobot implements PIDOutput {
 	}
 	void autoTestRoutine() {
 		double aimPixels = 130.;
-	
+		double shooterPixels = 80.;
 		switch (autoStep) {
 		case 1:
 			double power = loopCount * .05;
@@ -1371,7 +1394,7 @@ public class Robot extends IterativeRobot implements PIDOutput {
 		case 3:
 			if (autoTimer.get() > 0.5) {
 				if(analyzePicture) {
-					double deltaAngle = pictureAnalysis(aimPixels);
+					double deltaAngle = pictureAnalysis(aimPixels,shooterPixels);
 					if (foundTarget) {
 						if (deltaAngle > 0) turnToAngle = navX.getYaw() + deltaAngle + 0.5;
 						else turnToAngle = navX.getYaw() + deltaAngle - 0.5;
@@ -1404,13 +1427,14 @@ public class Robot extends IterativeRobot implements PIDOutput {
 	}
 	
 	void lowBarAutoHigh() {
-		double aimPixels = 135;
+		double aimPixels = 141;
 		double aimAngle = 3.53;
+		double shooterPixels = 82;
 		switch (autoStep) {
 		case 1:
 			moveArmDown();
 			setShooterAngle(aimAngle);
-			 if (autoTimer.get() > 2.2) {
+			 if (autoTimer.get() > 1.0) {
 			//if (armPot.getAverageVoltage() < 2.3) {
 				autoStep = 2;
 			}
@@ -1458,7 +1482,7 @@ public class Robot extends IterativeRobot implements PIDOutput {
 		case 5:
 			moveArmDown();
 			collector.set(1.0);
-			if (navX.getRoll() > rollOffset - 0.7) {
+			if (navX.getRoll() > rollOffset - 1.5) {
 				floorCount++;
 				if (floorCount == 2) {
 					distanceL.reset();
@@ -1512,9 +1536,10 @@ public class Robot extends IterativeRobot implements PIDOutput {
 			break;
 		case 8:
 			onSpeed = autoShooterSpeedControl();
-			if (onSpeed || autoTimer.get() > 4.0) {
+			if (onSpeed && autoTimer.get()>2.0) {
 				autoStep = 9;
 			}
+			else if (autoTimer.get() > 4.0) autoStep = 9;
 	//		shooterA.set(0.87);
 	//		shooterB.set(-0.76);
 	//		if (autoTimer.get() > 2.0) {
@@ -1544,26 +1569,34 @@ public class Robot extends IterativeRobot implements PIDOutput {
 			driveRobot(0, 0);
 			break;
 		case 12:
-			if (autoTimer.get() > 0.5) {
+			if (autoTimer.get() > 1.0) {
 				if(analyzePicture) {
-					double deltaAngle = pictureAnalysis(aimPixels);
+					double deltaAngle = pictureAnalysis(aimPixels,shooterPixels);
 					if (foundTarget) {
-						if (deltaAngle > 0) turnToAngle = navX.getYaw() + deltaAngle + 0.5;
-						else turnToAngle = navX.getYaw() + deltaAngle - 0.5;
+						if (deltaAngle > 0) turnToAngle = navX.getYaw() - deltaAngle + 0.75;
+						else turnToAngle = navX.getYaw() - deltaAngle - 0.75;
+						azTarget = launchAngle.getAverageVoltage() + deltaAz;
 					}
-					else turnToAngle = navX.getYaw();
+					else {
+						turnToAngle = navX.getYaw();
+						azTarget = launchAngle.getAverageVoltage();
+					}
+					analyzePicture = false;
 				}
 
-				if(turnRobot(turnToAngle))
-				{
-					turnCount++;
-					if(turnCount>4) {
-						autoStep = 8;
-						loopCount = 0;
-						autoTimer.reset();
+				else {
+					setShooterAngle(azTarget);
+					if(turnRobot(turnToAngle))
+					{
+						turnCount++;
+						if(turnCount>4) {
+							autoStep = 5;
+							loopCount = 0;
+							autoTimer.reset();
+							shootAngle.set(0);
+						}
 					}
 				}
-				
 			}
 			else driveRobot(0,0);
 			break;
@@ -1571,13 +1604,14 @@ public class Robot extends IterativeRobot implements PIDOutput {
 	}
 	
 	void newRoughTerrain2High() {
-		double aimPixels = 127;
-		double aimAngle = 3.2;
+		double aimPixels = 141;
+		double aimAngle = 3.3;
+		double shooterPixels = 80.0;
 		switch(autoStep) {
 		case 1:
 			moveArmDown();
 			setShooterAngle(aimAngle);
-			if (autoTimer.get() > 2.0) {
+			if (autoTimer.get() > 1.0) {
 				//if (armPot.getAverageVoltage() < 2.3) {
 				autoStep = 2;
 				defenseStep = 1;
@@ -1624,8 +1658,8 @@ public class Robot extends IterativeRobot implements PIDOutput {
 			} else if (loopCount > 10) {
 				if (turnRobot(turnToAngle)) {
 					turnCount++;
-					if (turnCount > 7) {
-						autoStep = 5;
+					if (turnCount > 2) {
+						autoStep = 9;
 						loopCount = 0;
 						autoTimer.reset();
 						shootAngle.set(0);
@@ -1641,10 +1675,11 @@ public class Robot extends IterativeRobot implements PIDOutput {
 			//		shooterA.set(0.87);
 			//		shooterB.set(-0.76);
 			onSpeed = autoShooterSpeedControl();
-			if (onSpeed || autoTimer.get()>4.0) {
+			if (onSpeed && autoTimer.get()>2.0 )   {
 				//		if (autoTimer.get() > 2.0) {
 				autoStep = 6;
 			}
+			else if (autoTimer.get()>4.0) autoStep = 6;
 			driveRobot(0, 0);
 			break;
 		case 6:
@@ -1667,26 +1702,34 @@ public class Robot extends IterativeRobot implements PIDOutput {
 			driveRobot(0, 0);
 break;
 		case 9:
-			if (autoTimer.get() > 0.5) {
+			if (autoTimer.get() > 1.0) {
 				if(analyzePicture) {
-					double deltaAngle = pictureAnalysis(aimPixels);
+					double deltaAngle = pictureAnalysis(aimPixels,shooterPixels);
 					if (foundTarget) {
-						if (deltaAngle > 0) turnToAngle = navX.getYaw() + deltaAngle + 0.5;
-						else turnToAngle = navX.getYaw() + deltaAngle - 0.5;
+						if (deltaAngle > 0) turnToAngle = navX.getYaw() - deltaAngle + 0.75;
+						else turnToAngle = navX.getYaw() - deltaAngle - 0.75;
+						azTarget = launchAngle.getAverageVoltage() + deltaAz;
 					}
-					else turnToAngle = navX.getYaw();
+					else {
+						turnToAngle = navX.getYaw();
+						azTarget = launchAngle.getAverageVoltage();
+					}
+					analyzePicture = false;
 				}
 
-				if(turnRobot(turnToAngle))
-				{
-					turnCount++;
-					if(turnCount>4) {
-						autoStep = 5;
-						loopCount = 0;
-						autoTimer.reset();
+				else {
+					setShooterAngle(azTarget);
+					if(turnRobot(turnToAngle))
+					{
+						turnCount++;
+						if(turnCount>4) {
+							autoStep = 5;
+							loopCount = 0;
+							autoTimer.reset();
+							shootAngle.set(0);
+						}
 					}
 				}
-				
 			}
 			else driveRobot(0,0);
 			break;
@@ -1698,13 +1741,14 @@ break;
 	}
 	
 	void newRT3High() {
-		double aimPixels = 130.;
-		double aimAngle = 3.3;
+		double aimPixels = 141.;
+		double aimAngle = 3.59;
+		double shooterPixels = 80;
 		switch(autoStep) {
 		case 1:
 			moveArmDown();
 			setShooterAngle(aimAngle);
-			if (autoTimer.get() > 2.0) {
+			if (autoTimer.get() > 1.0) {
 				//if (armPot.getAverageVoltage() < 2.3) {
 				autoStep = 2;
 				defenseStep = 1;
@@ -1729,7 +1773,7 @@ break;
 			break;
 		case 3:
 			collector.set(0.0);
-			if (distanceR.getRaw() > 7590) {
+			if (distanceR.getRaw() > 6600) {
 				driveStraight.disable();
 				turnSum = 0;
 				lastOffYaw = 0;
@@ -1751,8 +1795,8 @@ break;
 			} else if (loopCount > 10) {
 				if (turnRobot(turnToAngle)) {
 					turnCount++;
-					if (turnCount > 7) {
-						autoStep = 5;
+					if (turnCount > 2) {
+						autoStep = 9;
 						loopCount = 0;
 						autoTimer.reset();
 						shootAngle.set(0);
@@ -1768,10 +1812,11 @@ break;
 			//		shooterA.set(0.87);
 			//		shooterB.set(-0.76);
 			onSpeed = autoShooterSpeedControl();
-			if (onSpeed || autoTimer.get()>4.0) {
+			if (onSpeed && autoTimer.get()>2.0) {
 				//		if (autoTimer.get() > 2.0) {
 				autoStep = 6;
 			}
+			else if (autoTimer.get()>4.0) autoStep = 6;
 			driveRobot(0, 0);
 			break;
 		case 6:
@@ -1794,23 +1839,31 @@ break;
 			driveRobot(0, 0);
 			break;
 		case 9:
-			if (autoTimer.get() > 0.5) {
+			if (autoTimer.get() > 1.0) {
 				if(analyzePicture) {
-					double deltaAngle = pictureAnalysis(aimPixels);
+					double deltaAngle = pictureAnalysis(aimPixels,shooterPixels);
 					if (foundTarget) {
-						if (deltaAngle > 0) turnToAngle = navX.getYaw() + deltaAngle + 0.5;
-						else turnToAngle = navX.getYaw() + deltaAngle - 0.5;
+						if (deltaAngle > 0) turnToAngle = navX.getYaw() - deltaAngle + 0.75;
+						else turnToAngle = navX.getYaw() - deltaAngle - 0.75;
+						azTarget = launchAngle.getAverageVoltage() + deltaAz;
 					}
-					else turnToAngle = navX.getYaw();
+					else {
+						turnToAngle = navX.getYaw();
+						azTarget = launchAngle.getAverageVoltage();
+					}
+					analyzePicture = false;
 				}
-
-				if(turnRobot(turnToAngle))
-				{
-					turnCount++;
-					if(turnCount>4) {
-						autoStep = 5;
-						loopCount = 0;
-						autoTimer.reset();
+				else {
+					setShooterAngle(azTarget);
+					if(turnRobot(turnToAngle))
+					{
+						turnCount++;
+						if(turnCount>4) {
+							autoStep = 5;
+							loopCount = 0;
+							autoTimer.reset();
+							shootAngle.set(0);
+						}
 					}
 				}
 				
@@ -1979,13 +2032,14 @@ break;
 
 
 	void newRT4High() {
-		double aimPixels = 125.;
-		double aimAngle = 2.96;
+		double aimPixels = 141.;
+		double aimAngle = 3.35;
+		double shooterPixels = 80.;
 		switch(autoStep) {
 		case 1:
 			moveArmDown();
 			setShooterAngle(aimAngle);
-			if (autoTimer.get() > 2.5) {
+			if (autoTimer.get() > 1.0) {
 				//if (armPot.getAverageVoltage() < 2.3) {
 				autoStep = 2;
 				defenseStep = 1;
@@ -2010,7 +2064,7 @@ break;
 			break;
 		case 3:
 			collector.set(0.0);
-			if (distanceR.getRaw() > 9300) {
+			if (distanceR.getRaw() > 8400) {
 				driveStraight.disable();
 				turnSum = 0;
 				lastOffYaw = 0;
@@ -2032,8 +2086,8 @@ break;
 			} else if (loopCount > 10) {
 				if (turnRobot(turnToAngle)) {
 					turnCount++;
-					if (turnCount > 7) {
-						autoStep = 5;
+					if (turnCount > 2) {
+						autoStep = 9;
 						loopCount = 0;
 						autoTimer.reset();
 						shootAngle.set(0);
@@ -2049,10 +2103,11 @@ break;
 			//		shooterA.set(0.87);
 			//		shooterB.set(-0.76);
 			onSpeed = autoShooterSpeedControl();
-			if (onSpeed || autoTimer.get()>4.0) {
+			if (onSpeed && autoTimer.get()>2.0) {
 				//		if (autoTimer.get() > 2.0) {
 				autoStep = 6;
 			}
+			else if (autoTimer.get()>4.0) autoStep = 6;
 			driveRobot(0, 0);
 			break;
 		case 6:
@@ -2077,23 +2132,32 @@ break;
 			driveRobot(0, 0);
 			break;
 		case 9:
-			if (autoTimer.get() > 0.5) {
+			if (autoTimer.get() > 1.0) {
 				if(analyzePicture) {
-					double deltaAngle = pictureAnalysis(aimPixels);
+					double deltaAngle = pictureAnalysis(aimPixels,shooterPixels);
 					if (foundTarget) {
-						if (deltaAngle > 0) turnToAngle = navX.getYaw() + deltaAngle + 0.5;
-						else turnToAngle = navX.getYaw() + deltaAngle - 0.5;
+						if (deltaAngle > 0) turnToAngle = navX.getYaw() - deltaAngle + 0.75;
+						else turnToAngle = navX.getYaw() - deltaAngle - 0.75;
+						azTarget = launchAngle.getAverageVoltage() + deltaAz;
 					}
-					else turnToAngle = navX.getYaw();
+					else {
+						turnToAngle = navX.getYaw();
+						azTarget = launchAngle.getAverageVoltage();
+					}
+					analyzePicture = false;
 				}
 
-				if(turnRobot(turnToAngle))
-				{
-					turnCount++;
-					if(turnCount>4) {
-						autoStep = 5;
-						loopCount = 0;
-						autoTimer.reset();
+				else {
+					setShooterAngle(azTarget);
+					if(turnRobot(turnToAngle))
+					{
+						turnCount++;
+						if(turnCount>4) {
+							autoStep = 5;
+							loopCount = 0;
+							autoTimer.reset();
+							shootAngle.set(0);
+						}
 					}
 				}
 				
@@ -2105,13 +2169,14 @@ break;
 	}
 	
 	void newRoughTerrain5High() {
-		double aimPixels = 125.;
+		double aimPixels = 137.;
 		double aimAngle = 2.83;
+		double shooterPixels = 82.0;
 		switch(autoStep) {
 		case 1:
 			moveArmDown();
 			setShooterAngle(aimAngle);
-			if (autoTimer.get() > 2.0) {
+			if (autoTimer.get() > 1.0) {
 				//if (armPot.getAverageVoltage() < 2.3) {
 				autoStep = 2;
 				defenseStep = 1;
@@ -2159,7 +2224,7 @@ break;
 				if (turnRobot(turnToAngle)) {
 					turnCount++;
 					if (turnCount > 7) {
-						autoStep = 5;
+						autoStep = 9;
 						loopCount = 0;
 						autoTimer.reset();
 						shootAngle.set(0);
@@ -2175,10 +2240,11 @@ break;
 			//		shooterA.set(0.87);
 			//		shooterB.set(-0.76);
 			onSpeed = autoShooterSpeedControl();
-			if (onSpeed || autoTimer.get()>4.0) {
+			if (onSpeed && autoTimer.get()>2.0) {
 				//		if (autoTimer.get() > 2.0) {
 				autoStep = 6;
 			}
+			else if (autoTimer.get()>4.0) autoStep = 6;
 			driveRobot(0, 0);
 			break;
 		case 6:
@@ -2201,23 +2267,32 @@ break;
 			driveRobot(0, 0);
 			break;
 		case 9:
-			if (autoTimer.get() > 0.5) {
+			if (autoTimer.get() > 1.0) {
 				if(analyzePicture) {
-					double deltaAngle = pictureAnalysis(aimPixels);
+					double deltaAngle = pictureAnalysis(aimPixels,shooterPixels);
 					if (foundTarget) {
-						if (deltaAngle > 0) turnToAngle = navX.getYaw() + deltaAngle + 0.5;
-						else turnToAngle = navX.getYaw() + deltaAngle - 0.5;
+						if (deltaAngle > 0) turnToAngle = navX.getYaw() - deltaAngle + 0.75;
+						else turnToAngle = navX.getYaw() - deltaAngle - 0.75;
+						azTarget = launchAngle.getAverageVoltage() + deltaAz;
 					}
-					else turnToAngle = navX.getYaw();
+					else {
+						turnToAngle = navX.getYaw();
+						azTarget = launchAngle.getAverageVoltage();
+					}
+					analyzePicture = false;
 				}
 
-				if(turnRobot(turnToAngle))
-				{
-					turnCount++;
-					if(turnCount>4) {
-						autoStep = 5;
-						loopCount = 0;
-						autoTimer.reset();
+				else {
+					setShooterAngle(azTarget);
+					if(turnRobot(turnToAngle))
+					{
+						turnCount++;
+						if(turnCount>4) {
+							autoStep = 5;
+							loopCount = 0;
+							autoTimer.reset();
+							shootAngle.set(0);
+						}
 					}
 				}
 				

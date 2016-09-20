@@ -25,19 +25,20 @@ public class Udp implements Runnable {
 	public void run() {
 		ByteBuffer buf = ByteBuffer.allocate(72);
 		DatagramPacket packet = new DatagramPacket(buf.array(), buf.limit());
-		while (more) {
+		while (true) {
 			try {
 				buf.position(0);
 				packet.setLength(buf.limit());
-				System.out.println("preRecieve");
+		//		System.out.println("preRecieve");
 				socket.receive(packet);
-				System.out.print("postRecieve ");
+		//		System.out.print("postRecieve ");
 				final int id = buf.getInt();
 				if (id <= lastID)
 					continue;
 				lastID = id;
+		//		System.out.print(id+" ");
 				final short status = buf.getShort();
-				System.out.println(status);
+		//		System.out.println(status);
 				buf.getShort();
 				Box[] data = new Box[2];
 				// doubles as l,r,w,h
@@ -48,7 +49,7 @@ public class Udp implements Runnable {
 						y = buf.getDouble();
 						w = buf.getDouble();
 						h = buf.getDouble();
-						data[1] = new Box(width * (x + w / 2), height * (y + h / 2), w, h);
+						data[1] = new Box(width * (x + w / 2), height * (y + h / 2), width * w, height * h);
 					case oneFound:
 						x = buf.getDouble();
 						y = buf.getDouble();
@@ -60,11 +61,13 @@ public class Udp implements Runnable {
 				}
 				this.boxes = data;
 				for (byte n = 0; n < boxes.length; n++)
-					if (boxes[n] != null)
+					if (boxes[n] != null){
 						SmartDashboard.putNumber("x-" + n, boxes[n].getX());
+						SmartDashboard.putNumber("y-" + n, boxes[n].getY());
+					}
 			} catch (Exception e) {
 				e.printStackTrace();
-				more = false;
+				break;
 			}
 		}
 		socket.close();
@@ -73,4 +76,5 @@ public class Udp implements Runnable {
 	public synchronized Box[] getData() {
 		return boxes;
 	}
+	
 }
