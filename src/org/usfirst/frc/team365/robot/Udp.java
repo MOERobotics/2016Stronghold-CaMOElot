@@ -29,16 +29,17 @@ public class Udp implements Runnable {
 			try {
 				buf.position(0);
 				packet.setLength(buf.limit());
-		//		System.out.println("preRecieve");
+				System.out.println("preRecieve");
 				socket.receive(packet);
-		//		System.out.print("postRecieve ");
+				System.out.print("postRecieve ");
 				final int id = buf.getInt();
 				if (id <= lastID)
 					continue;
 				lastID = id;
-		//		System.out.print(id+" ");
+				System.out.print(id+" ");
+				SmartDashboard.putNumber("Tracking ID", id);
 				final short status = buf.getShort();
-		//		System.out.println(status);
+				System.out.println(status);
 				buf.getShort();
 				Box[] data = new Box[2];
 				// doubles as l,r,w,h

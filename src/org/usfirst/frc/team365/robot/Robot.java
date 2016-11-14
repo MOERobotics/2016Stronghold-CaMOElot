@@ -16,6 +16,7 @@ import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.PIDController;
 import edu.wpi.first.wpilibj.PIDOutput;
 import edu.wpi.first.wpilibj.SPI;
+import edu.wpi.first.wpilibj.Servo;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.networktables.NetworkTable;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -84,6 +85,7 @@ public class Robot extends IterativeRobot implements PIDOutput {
 	int autoRoutine;
 	int turnCount;
 	int floorCount;
+	int grabCount;
 	boolean shooterOn;
 	int onTape;
 	boolean pastButton2D;
@@ -164,7 +166,10 @@ public class Robot extends IterativeRobot implements PIDOutput {
 	final static int NAK=0;
 	AutoData autoData;
 	
-	final static boolean AUTO_TARGETING_USE_UDP=false;
+	final static boolean AUTO_TARGETING_USE_UDP=true;
+	
+	
+	Servo flag=new Servo(9);
 
 	public Robot() {
 		
@@ -298,7 +303,7 @@ public class Robot extends IterativeRobot implements PIDOutput {
 			SmartDashboard.putNumber("desiredSpeedA", setSpeedA);
 			SmartDashboard.putNumber("desiredSpeedB", setSpeedB);
 
-			SmartDashboard.putBoolean("ballSensor", ballSensor.get());
+			SmartDashboard.putBoolean("ballSensor", !ballSensor.get());
 			SmartDashboard.putBoolean("tapeSensor", tapeSensor.get());
 			SmartDashboard.putNumber("armPot", armPot.getAverageVoltage());
 			SmartDashboard.putNumber("shooterAngle", launchAngle.getVoltage());
@@ -324,6 +329,8 @@ public class Robot extends IterativeRobot implements PIDOutput {
 			
 			SmartDashboard.putNumber("autoChoice", autoRoutine);
 			SmartDashboard.putNumber("moat", moat);
+			
+			SmartDashboard.putBoolean("foundTarget", foundTarget);
 //			double chooseAuto = SmartDashboard.getNumber("autoChoice");
 //			autoRoutine = (int) chooseAuto;
 			
@@ -344,6 +351,7 @@ public class Robot extends IterativeRobot implements PIDOutput {
 		floorCount = 0;
 		pastButton4 = false;
 		pidContOn = false;
+		grabCount = 0;
 //		rollOffset = navX.getRoll();
 		pastButton3D = false;
 		pastButton4D = false;
@@ -375,6 +383,12 @@ public class Robot extends IterativeRobot implements PIDOutput {
 		boolean newButton10D = driveStick.getRawButton(10);
 		boolean newButton11D = driveStick.getRawButton(11);
 		boolean newButton12D = driveStick.getRawButton(12);
+		
+		
+		if(newButton8D){
+			flag.setAngle(60);
+		}else flag.setAngle(0);
+		
 		
 		
 		
@@ -516,7 +530,8 @@ public class Robot extends IterativeRobot implements PIDOutput {
 		}
 		*/
 		
-//		 else 
+//		 else
+		/*
 			 if (newButton3D) { // programmed turn routine to 0 degrees
 			if (!pastButton3D) {
 				lastOffYaw = 0;
@@ -524,21 +539,23 @@ public class Robot extends IterativeRobot implements PIDOutput {
 			}
 
 			turnRobot(0.0);
-		} else if (newButton2D) { // programmed to turn 4 degrees left
+		} else */
+		if (newButton2D) { // programmed to turn 4 degrees left
 			if (!pastButton2D) {
 				lastOffYaw = 0;
 				turnSum = 0;
-				turnToAngle = navX.getYaw() - 6.0;
+				turnToAngle = navX.getYaw() - 5.0;
 			}
 			turnRobot(turnToAngle);
 		} else if (newButton4D) { // programmed to turn 4 degrees right
 			if (!pastButton4D) {
 				lastOffYaw = 0;
 				turnSum = 0;
-				turnToAngle = navX.getYaw() + 6.0;
+				turnToAngle = navX.getYaw() + 5.0;
 			}
 			turnRobot(turnToAngle);
 		}
+		/*
 		else if (newButton11D) {
 			if (!pastButton11D) {		
 				startYaw = navX.getYaw();
@@ -556,6 +573,7 @@ public class Robot extends IterativeRobot implements PIDOutput {
 			}
 			turnRobot(turnToAngle);
 		}
+		*/
 		else if (newButton5D) {
 			if(!pastButton5D) {
 				startYaw=navX.getYaw();
@@ -565,7 +583,7 @@ public class Robot extends IterativeRobot implements PIDOutput {
 			}
 			if(analyzePicture) {
 
-				double deltaAngle = pictureAnalysis(141,82);
+				double deltaAngle = pictureAnalysis(138,82);
 				SmartDashboard.putNumber("deltaAngle",deltaAngle);
 				if (foundTarget) {
 					if (deltaAngle > 0) {
@@ -587,7 +605,42 @@ public class Robot extends IterativeRobot implements PIDOutput {
 			System.out.println(turnToAngle);
 			turnRobot(turnToAngle);
 			SmartDashboard.putNumber("azTarget", azTarget);
-			setShooterAngle(azTarget);
+	
+//			setShooterAngle(azTarget);
+		}
+		else if (newButton6D) {
+			if(!pastButton6D) {
+				startYaw=navX.getYaw();
+				startAzimuth = launchAngle.getAverageVoltage();
+				turnSum = 0;
+				lastOffYaw = 0;
+			}
+			if(analyzePicture) {
+
+				double deltaAngle = pictureAnalysis(146,105);
+				SmartDashboard.putNumber("deltaAngle",deltaAngle);
+				if (foundTarget) {
+					if (deltaAngle > 0) {
+						turnToAngle = startYaw - deltaAngle + 0.75;
+						
+					}
+					else {
+						turnToAngle = startYaw - deltaAngle - 0.75;
+					}
+					azTarget = startAzimuth + deltaAz;
+					SmartDashboard.putNumber("azTarget", azTarget);
+				}
+				else {
+					turnToAngle = startYaw;
+					azTarget = startAzimuth;
+					
+				}
+			}
+			System.out.println(turnToAngle);
+			turnRobot(turnToAngle);
+			SmartDashboard.putNumber("azTarget", azTarget);
+	
+//			setShooterAngle(azTarget);
 		}
 		else {
 			// Drive robot with one joystick
@@ -614,7 +667,7 @@ public class Robot extends IterativeRobot implements PIDOutput {
 			SmartDashboard.putNumber("powerB", powerB);
 			SmartDashboard.putNumber("speedB", 60. / shootSpeedB.getPeriod());
 
-			SmartDashboard.putBoolean("ballSensor", ballSensor.get());
+			SmartDashboard.putBoolean("ballSensor", !ballSensor.get());
 			SmartDashboard.putBoolean("tapeSensor", tapeSensor.get());
 			SmartDashboard.putNumber("armPot", armPot.getAverageVoltage());
 			SmartDashboard.putNumber("shooterAngle", launchAngle.getVoltage());
@@ -735,6 +788,7 @@ public class Robot extends IterativeRobot implements PIDOutput {
 		}
 		
 		//serialize();
+		SmartDashboard.putBoolean("foundTarget", foundTarget);
 	}
 
 	public void testInit() {
@@ -984,8 +1038,11 @@ public class Robot extends IterativeRobot implements PIDOutput {
 				ballControl.set(1.0); // use 0.5 on real bot
 				collector.set(0.8);
 			} else {
-				ballControl.set(0);
-				collector.set(0);
+				grabCount ++;
+				if (grabCount > 3) {
+					ballControl.set(0);
+					collector.set(0);
+				}
 			}
 		} else if (funStick.getRawButton(3)) { // run collector to push balls out
 			if (funStick.getTrigger()) {
@@ -996,9 +1053,11 @@ public class Robot extends IterativeRobot implements PIDOutput {
 				collector.set(-1.0);
 				ballControl.set(-1.0);
 			}
+			grabCount = 0;
 		} else {
 			collector.set(0);
 			ballControl.set(0);
+			grabCount = 0;
 		}
 	}
 
@@ -1030,7 +1089,7 @@ public class Robot extends IterativeRobot implements PIDOutput {
 //			setShooterAngle(shooterOuterWorks);
 
 		//		else 
-		if (!driveStick.getRawButton(5))  {
+//		if (!driveStick.getRawButton(5) && !driveStick.getRawButton(6))  {
 			if (funStick.getRawButton(6)) { // want steeper shoot angle
 				// if (launchAngle.getAverageVoltage() < 2.3) shootAngle.set(0);
 				// else
@@ -1043,7 +1102,7 @@ public class Robot extends IterativeRobot implements PIDOutput {
 				shootAngle.set(0);
 
 		}
-	}
+//	}
 
 	void setShooterAngle(double setAngle) {
 		double currentAngle = launchAngle.getAverageVoltage();
@@ -1313,6 +1372,7 @@ public class Robot extends IterativeRobot implements PIDOutput {
 				}
 			}
 		}
+		SmartDashboard.putNumber("biggestBox", pastSize);
 		if(pastSize>0)
 		{
 			analyzePicture=false;
@@ -1428,8 +1488,9 @@ public class Robot extends IterativeRobot implements PIDOutput {
 	
 	void lowBarAutoHigh() {
 		double aimPixels = 141;
-		double aimAngle = 3.53;
-		double shooterPixels = 82;
+		double aimAngle = 3.75;  //3.53;
+		double shooterPixels = 105
+				;
 		switch (autoStep) {
 		case 1:
 			moveArmDown();
@@ -1497,7 +1558,7 @@ public class Robot extends IterativeRobot implements PIDOutput {
 			if (autoTimer.get() > 1.5) arm.set(0);
 			else	arm.set(-1);
 			collector.set(0);
-			if (distanceR.getRaw() > 9300) {
+			if (distanceR.getRaw() > 9700) {
 				driveStraight.disable();
 				turnSum = 0;
 				lastOffYaw = 0;
@@ -1520,8 +1581,8 @@ public class Robot extends IterativeRobot implements PIDOutput {
 			} else if (loopCount > 10) {
 				if (turnRobot(turnToAngle)) {
 					turnCount++;
-					if (turnCount > 6) {
-						autoStep = 8;
+					if (turnCount > 2) {
+						autoStep = 12;
 						turnSum = 0;
 						turnCount = 0;
 						loopCount = 0;
@@ -1549,9 +1610,9 @@ public class Robot extends IterativeRobot implements PIDOutput {
 			break;
 		case 9:
 			autoShooterSpeedControl();
-			if (autoTimer.get() > 2.5) {
+//			if (autoTimer.get() > 2.5) {
 			ballControl.set(1.0);
-			}
+//			}
 			if (autoTimer.get() > 7.0) {
 				autoStep = 10;
 			}
@@ -1590,7 +1651,7 @@ public class Robot extends IterativeRobot implements PIDOutput {
 					{
 						turnCount++;
 						if(turnCount>4) {
-							autoStep = 5;
+							autoStep = 8;
 							loopCount = 0;
 							autoTimer.reset();
 							shootAngle.set(0);
@@ -1604,8 +1665,8 @@ public class Robot extends IterativeRobot implements PIDOutput {
 	}
 	
 	void newRoughTerrain2High() {
-		double aimPixels = 141;
-		double aimAngle = 3.3;
+		double aimPixels = 138;
+		double aimAngle = 3.1;  //3.3;
 		double shooterPixels = 80.0;
 		switch(autoStep) {
 		case 1:
@@ -1741,8 +1802,8 @@ break;
 	}
 	
 	void newRT3High() {
-		double aimPixels = 141.;
-		double aimAngle = 3.59;
+		double aimPixels = 139.;
+		double aimAngle = 3.4;  //3.59;
 		double shooterPixels = 80;
 		switch(autoStep) {
 		case 1:
@@ -1789,7 +1850,7 @@ break;
 				// double sonarDist = moeSonar.getAverageVoltage();
 				// double newAngle = sonarDist/0.15 + 0.2;
 				// turnToAngle = 90.0 - Math.atan(newAngle/12.5);
-				turnToAngle = 25.5;
+				turnToAngle = 24.0;
 				turnRobot(turnToAngle);
 				turnCount = 0;
 			} else if (loopCount > 10) {
@@ -1891,8 +1952,7 @@ break;
 			double power = loopCount * .05;
 			if (power > 0.6) {
 				driveStraight.setPID(.04, 0.00005, .03);
-				driveStraight.setSetpoint(0);
-				direction = 0.6;
+				driveStraight.setSetpoint(0);				
 				driveStraight.enable();
 				shootAngle.set(0);
 				autoStep = 3;
@@ -2032,8 +2092,8 @@ break;
 
 
 	void newRT4High() {
-		double aimPixels = 141.;
-		double aimAngle = 3.35;
+		double aimPixels = 138.;
+		double aimAngle = 3.1;  //3.35;
 		double shooterPixels = 80.;
 		switch(autoStep) {
 		case 1:
@@ -2080,7 +2140,7 @@ break;
 				// double sonarDist = moeSonar.getAverageVoltage();
 				// double newAngle = sonarDist/0.15 + 0.2;
 				// turnToAngle = 90.0 - Math.atan(newAngle/12.5);
-				turnToAngle = -14.0;
+				turnToAngle = -13.0;
 				turnRobot(turnToAngle);
 				turnCount = 0;
 			} else if (loopCount > 10) {
@@ -2169,8 +2229,8 @@ break;
 	}
 	
 	void newRoughTerrain5High() {
-		double aimPixels = 137.;
-		double aimAngle = 2.83;
+		double aimPixels = 138.;
+		double aimAngle = 2.93;
 		double shooterPixels = 82.0;
 		switch(autoStep) {
 		case 1:
