@@ -1,4 +1,4 @@
-package org.usfirst.frc.team365.robot;
+package org.usfirst.frc.team666.robot;
 
 import java.net.SocketException;
 
@@ -6,7 +6,7 @@ import com.kauailabs.navx.frc.AHRS;
 
 import edu.wpi.first.wpilibj.AnalogInput;
 //import edu.wpi.first.wpilibj.SPI;
-import edu.wpi.first.wpilibj.CANTalon;
+import com.ctre.CANTalon;
 import edu.wpi.first.wpilibj.Counter;
 import edu.wpi.first.wpilibj.CounterBase.EncodingType;
 import edu.wpi.first.wpilibj.DigitalInput;
@@ -41,12 +41,12 @@ public class Robot extends IterativeRobot implements PIDOutput {
 	CANTalon driveRA = new CANTalon(1);
 	CANTalon driveRB = new CANTalon(2);
 	CANTalon driveRC = new CANTalon(3);
-	CANTalon shooterA = new CANTalon(9);
+	CANTalon shooterA = new CANTalon(15);
 	CANTalon shooterB = new CANTalon(10);
 	CANTalon shootAngle = new CANTalon(11);
-	CANTalon scaleL = new CANTalon(15);
-	CANTalon scaleR = new CANTalon(0);
-	CANTalon collector = new CANTalon(6);
+	//CANTalon scaleL = new CANTalon(15);
+	//CANTalon scaleR = new CANTalon(0);
+	CANTalon collector = new CANTalon(0);
 	CANTalon ballControl = new CANTalon(5);
 	CANTalon arm = new CANTalon(4);
 
@@ -1128,26 +1128,26 @@ public class Robot extends IterativeRobot implements PIDOutput {
 	}
 
 	void controlScalingArms() {
-		if (funStick.getRawButton(8)&&(!tapeSensor.get()||funStick.getRawButton(1))){
-			scaleL.set(0);
-			scaleR.set(-1.0);
-		} else if (funStick.getRawButton(9)) { // lift robot
-			scaleL.set(-1.0);
-			scaleR.set(0);
-		} else {
-			scaleL.set(0);
-			scaleR.set(0);
-		}
+//		if (funStick.getRawButton(8)&&(!tapeSensor.get()||funStick.getRawButton(1))){
+//			scaleL.set(0);
+//			scaleR.set(-1.0);
+//		} else if (funStick.getRawButton(9)) { // lift robot
+//			scaleL.set(-1.0);
+//			scaleR.set(0);
+//		} else {
+//			scaleL.set(0);
+//			scaleR.set(0);
+//		}
 	}
 
 	void reverseWinch() {
-		if (funStick.getRawButton(10)) {
-			scaleL.set(0.4);
-		}
-		else if(funStick.getRawButton(11)){
-			scaleL.set(-0.4);
-		}else
-			scaleL.set(0);
+//		if (funStick.getRawButton(10)) {
+//			scaleL.set(0.4);
+//		}
+//		else if(funStick.getRawButton(11)){
+//			scaleL.set(-0.4);
+//		}else
+//			scaleL.set(0);
 	}
 
 	boolean turnRobot(double setBearing) {
