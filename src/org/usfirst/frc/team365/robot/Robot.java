@@ -1,12 +1,15 @@
-package org.usfirst.frc.team666.robot;
+package org.usfirst.frc.team365.robot;
 
 import java.net.SocketException;
 
 import com.kauailabs.navx.frc.AHRS;
 
 import edu.wpi.first.wpilibj.AnalogInput;
+
+import com.ctre.phoenix.motorcontrol.ControlMode;
+import com.ctre.phoenix.motorcontrol.NeutralMode;
 //import edu.wpi.first.wpilibj.SPI;
-import com.ctre.CANTalon;
+import com.ctre.phoenix.motorcontrol.can.*;
 import edu.wpi.first.wpilibj.Counter;
 import edu.wpi.first.wpilibj.CounterBase.EncodingType;
 import edu.wpi.first.wpilibj.DigitalInput;
@@ -35,20 +38,20 @@ public class Robot extends IterativeRobot implements PIDOutput {
 
 	AHRS navX;
 
-	CANTalon driveLA = new CANTalon(12);
-	CANTalon driveLB = new CANTalon(13);
-	CANTalon driveLC = new CANTalon(14);
-	CANTalon driveRA = new CANTalon(1);
-	CANTalon driveRB = new CANTalon(2);
-	CANTalon driveRC = new CANTalon(3);
-	CANTalon shooterA = new CANTalon(15);
-	CANTalon shooterB = new CANTalon(10);
-	CANTalon shootAngle = new CANTalon(11);
-	//CANTalon scaleL = new CANTalon(15);
-	//CANTalon scaleR = new CANTalon(0);
-	CANTalon collector = new CANTalon(0);
-	CANTalon ballControl = new CANTalon(5);
-	CANTalon arm = new CANTalon(4);
+	TalonSRX driveLA = new TalonSRX(12);
+	TalonSRX driveLB = new TalonSRX(13);
+	TalonSRX driveLC = new TalonSRX(14);
+	TalonSRX driveRA = new TalonSRX(1);
+	TalonSRX driveRB = new TalonSRX(2);
+	TalonSRX driveRC = new TalonSRX(3);
+	TalonSRX shooterA = new TalonSRX(15);
+	TalonSRX shooterB = new TalonSRX(10);
+	TalonSRX shootAngle = new TalonSRX(11);
+	//TalonSRX scaleL = new TalonSRX(15);
+	//TalonSRX scaleR = new TalonSRX(0);
+	TalonSRX collector = new TalonSRX(0);
+	TalonSRX ballControl = new TalonSRX(5);
+	TalonSRX arm = new TalonSRX(4);
 
 	Joystick driveStick = new Joystick(0);
 	Joystick funStick = new Joystick(1);
@@ -192,19 +195,23 @@ public class Robot extends IterativeRobot implements PIDOutput {
 		driveRA.setInverted(true);
 		driveRB.setInverted(true);
 		driveRC.setInverted(true);
+		
 
-		driveLA.enableBrakeMode(true);
-		driveLB.enableBrakeMode(true);
-		driveLC.enableBrakeMode(true);
-		driveRA.enableBrakeMode(true);
-		driveRB.enableBrakeMode(true);
-		driveRC.enableBrakeMode(true);
+		shooterA.setInverted(true);
+		shooterB.setInverted(true);
+
+		driveLA.setNeutralMode(NeutralMode.Brake);
+		driveLB.setNeutralMode(NeutralMode.Brake);
+		driveLC.setNeutralMode(NeutralMode.Brake);
+		driveRA.setNeutralMode(NeutralMode.Brake);
+		driveRB.setNeutralMode(NeutralMode.Brake);
+		driveRC.setNeutralMode(NeutralMode.Brake);
 
 		shootSpeedA.setSamplesToAverage(5);
 
-		arm.enableBrakeMode(true);
-		shootAngle.enableBrakeMode(true);
-		ballControl.enableBrakeMode(true);
+		arm.setNeutralMode(NeutralMode.Brake);
+		shootAngle.setNeutralMode(NeutralMode.Brake);
+		ballControl.setNeutralMode(NeutralMode.Brake);
 
 		// SmartDashboard.putNumber("desiredSpeedA", 4000.);
 		// SmartDashboard.putNumber("desiredSpeedB", 4000.);
@@ -244,11 +251,11 @@ public class Robot extends IterativeRobot implements PIDOutput {
 	public void disabledInit() {
 		disabledLoop = 0;
 		shooterOn = false;
-		shooterA.set(0);
-		shooterB.set(0);
-		arm.set(0);
+		shooterA.set(ControlMode.PercentOutput, 0);
+		shooterB.set(ControlMode.PercentOutput, 0);
+		arm.set(ControlMode.PercentOutput, 0);
 		// driveRobot(0,0);
-		collector.set(0);
+		collector.set(ControlMode.PercentOutput, 0);
 		if (angleController.isEnabled()) {
 			angleController.disable();
 		}
@@ -261,7 +268,7 @@ public class Robot extends IterativeRobot implements PIDOutput {
 		disabledLoop++;
 
 		if(driveStick.getRawButton(1))
-			autoFile.writeAutoFile(Integer.toString((int)SmartDashboard.getNumber("dfltChoice")));
+			autoFile.writeAutoFile(Integer.toString((int)SmartDashboard.getNumber("dfltChoice",0)));
 		
 		if (driveStick.getRawButton(4)) {
 			distanceL.reset();
@@ -407,8 +414,8 @@ public class Robot extends IterativeRobot implements PIDOutput {
 
 		} else if (funStick.getRawButton(5)) {
 			shooterOn = false;
-			shooterA.set(0);
-			shooterB.set(0);
+			shooterA.set(ControlMode.PercentOutput, 0);
+			shooterB.set(ControlMode.PercentOutput, 0);
 		}
 
 		// If shooter is "on", set shooter motors to desired speeds
@@ -416,8 +423,8 @@ public class Robot extends IterativeRobot implements PIDOutput {
 		if (shooterOn) {
 			double zValue = funStick.getZ();
 			if (zValue  > 0.5) {
-				shooterA.set(-1.0);
-				shooterB.set(1.0);
+				shooterA.set(ControlMode.PercentOutput, -1.0);
+				shooterB.set(ControlMode.PercentOutput, 1.0);
 			}
 			else if (zValue < -0.5){
 	//			testShooterSpeeds();
@@ -434,13 +441,13 @@ public class Robot extends IterativeRobot implements PIDOutput {
 							controlShooter();
 
 				if (funStick.getTrigger()) {
-					ballControl.set(1.0);
+					ballControl.set(ControlMode.PercentOutput, 1.0);
 				} else
-					ballControl.set(0);
+					ballControl.set(ControlMode.PercentOutput, 0);
 			}
 			else {
-				shooterA.set(0);
-				shooterB.set(0);
+				shooterA.set(ControlMode.PercentOutput, 0);
+				shooterB.set(ControlMode.PercentOutput, 0);
 			}
 		}
 
@@ -448,7 +455,7 @@ public class Robot extends IterativeRobot implements PIDOutput {
 		if (!shooterOn) {
 			controlCollector();
 		} else
-			collector.set(0);
+			collector.set(ControlMode.PercentOutput, 0);
 
 		// Raise and lower arm as desired
 		controlArm();
@@ -819,71 +826,71 @@ public class Robot extends IterativeRobot implements PIDOutput {
 		else if (rightSide < -1)
 			rightSide = -1.0;
 
-		driveLA.set(leftSide);
-		driveLB.set(leftSide);
-		driveLC.set(leftSide);
-		driveRA.set(rightSide);
-		driveRB.set(rightSide);
-		driveRC.set(rightSide);
+		driveLA.set(ControlMode.PercentOutput, leftSide);
+		driveLB.set(ControlMode.PercentOutput, leftSide);
+		driveLC.set(ControlMode.PercentOutput, leftSide);
+		driveRA.set(ControlMode.PercentOutput, rightSide);
+		driveRB.set(ControlMode.PercentOutput, rightSide);
+		driveRC.set(ControlMode.PercentOutput, rightSide);
 
 	}
 
 	void testTalons() {
 		if (driveStick.getRawButton(5))
-			driveLA.set(1.0);
+			driveLA.set(ControlMode.PercentOutput, 1.0);
 		else if (driveStick.getRawButton(6))
-			driveLA.set(-1.);
+			driveLA.set(ControlMode.PercentOutput, -1.);
 		else
-			driveLA.set(0);
+			driveLA.set(ControlMode.PercentOutput, 0);
 		if (driveStick.getRawButton(7))
-			driveLB.set(1.0);
+			driveLB.set(ControlMode.PercentOutput, 1.0);
 		else if (driveStick.getRawButton(8))
-			driveLB.set(-1.0);
+			driveLB.set(ControlMode.PercentOutput, -1.0);
 		else
-			driveLB.set(0);
+			driveLB.set(ControlMode.PercentOutput, 0);
 		if (driveStick.getRawButton(9))
-			driveLC.set(1.0);
+			driveLC.set(ControlMode.PercentOutput, 1.0);
 		else if (driveStick.getRawButton(10))
-			driveLC.set(-1.0);
+			driveLC.set(ControlMode.PercentOutput, -1.0);
 		else
-			driveLC.set(0);
-		// if (driveStick.getRawButton(11)) shootAngle.set(1.0);
-		// else if (driveStick.getRawButton(12)) shootAngle.set(-1.0);
-		// else shootAngle.set(0);
+			driveLC.set(ControlMode.PercentOutput, 0);
+		// if (driveStick.getRawButton(11)) shootAngle.set(ControlMode.PercentOutput, 1.0);
+		// else if (driveStick.getRawButton(12)) shootAngle.set(ControlMode.PercentOutput, -1.0);
+		// else shootAngle.set(ControlMode.PercentOutput, 0);
 
 		if (funStick.getRawButton(5))
-			driveRA.set(1.0);
+			driveRA.set(ControlMode.PercentOutput, 1.0);
 		else if (funStick.getRawButton(6))
-			driveRA.set(-1.0);
+			driveRA.set(ControlMode.PercentOutput, -1.0);
 		else
-			driveRA.set(0);
+			driveRA.set(ControlMode.PercentOutput, 0);
 		if (funStick.getRawButton(7))
-			driveRB.set(1.0);
+			driveRB.set(ControlMode.PercentOutput, 1.0);
 		else if (funStick.getRawButton(8))
-			driveRB.set(-1.0);
+			driveRB.set(ControlMode.PercentOutput, -1.0);
 		else
-			driveRB.set(0);
+			driveRB.set(ControlMode.PercentOutput, 0);
 		if (driveStick.getRawButton(11))
-			driveRC.set(1.0);
+			driveRC.set(ControlMode.PercentOutput, 1.0);
 		else if (driveStick.getRawButton(12))
-			driveRC.set(-1.0);
+			driveRC.set(ControlMode.PercentOutput, -1.0);
 		else
-			driveRC.set(0);
-		// if (funStick.getRawButton(11)) arm.set(1.0);
-		// else if (funStick.getRawButton(12)) arm.set(-1.0);
-		// else arm.set(0);
+			driveRC.set(ControlMode.PercentOutput, 0);
+		// if (funStick.getRawButton(11)) arm.set(ControlMode.PercentOutput, 1.0);
+		// else if (funStick.getRawButton(12)) arm.set(ControlMode.PercentOutput, -1.0);
+		// else arm.set(ControlMode.PercentOutput, 0);
 
 	}
 
 	void testShooterSpeeds() {
 		// mainPower = SmartDashboard.getNumber("powerA");
 		powerA = (driveStick.getRawAxis(2) + 1.0) / 2.0;
-		shooterA.set(powerA);
+		shooterA.set(ControlMode.PercentOutput, powerA);
 		// secondPower = SmartDashboard.getNumber("powerB");
 		powerB = (driveStick.getRawAxis(4) + 1.0) / 2.0;
-		shooterB.set(-powerB);
-		// shooterA.set(1.0);
-		// shooterB.set(-1.0);
+		shooterB.set(ControlMode.PercentOutput, -powerB);
+		// shooterA.set(ControlMode.PercentOutput, 1.0);
+		// shooterB.set(ControlMode.PercentOutput, -1.0);
 	}
 
 	void controlShooter() {
@@ -947,14 +954,14 @@ public class Robot extends IterativeRobot implements PIDOutput {
 			else if (newPowerB < 0)
 				newPowerB = 0;
 
-			shooterA.set(newPowerA);
-			shooterB.set(-newPowerB);
+			shooterA.set(ControlMode.PercentOutput, newPowerA);
+			shooterB.set(ControlMode.PercentOutput, -newPowerB);
 
 			powerA = newPowerA;
 			powerB = newPowerB;
 		} else {
-			shooterA.set(0);
-			shooterB.set(0);
+			shooterA.set(ControlMode.PercentOutput, 0);
+			shooterB.set(ControlMode.PercentOutput, 0);
 			powerA = 0;
 			powerB = 0;
 		}
@@ -1015,8 +1022,8 @@ public class Robot extends IterativeRobot implements PIDOutput {
 			else if (newPowerB < 0)
 				newPowerB = 0;
 
-			shooterA.set(newPowerA);
-			shooterB.set(-newPowerB);
+			shooterA.set(ControlMode.PercentOutput, newPowerA);
+			shooterB.set(ControlMode.PercentOutput, -newPowerB);
 			
 			if (Math.abs(currentSpeedA - 4200.) < 50.0) {
 				return true;
@@ -1033,30 +1040,30 @@ public class Robot extends IterativeRobot implements PIDOutput {
 
 	void controlCollector() {
 		if (funStick.getRawButton(2)) { // run collector to bring balls in
-//			collector.set(0.8);
+//			collector.set(ControlMode.PercentOutput, 0.8);
 			if (ballSensor.get()) {
-				ballControl.set(1.0); // use 0.5 on real bot
-				collector.set(0.8);
+				ballControl.set(ControlMode.PercentOutput, 1.0); // use 0.5 on real bot
+				collector.set(ControlMode.PercentOutput, 0.8);
 			} else {
 				grabCount ++;
 				if (grabCount > 3) {
-					ballControl.set(0);
-					collector.set(0);
+					ballControl.set(ControlMode.PercentOutput, 0);
+					collector.set(ControlMode.PercentOutput, 0);
 				}
 			}
 		} else if (funStick.getRawButton(3)) { // run collector to push balls out
 			if (funStick.getTrigger()) {
-				collector.set(-1.0);
-				ballControl.set(0);
+				collector.set(ControlMode.PercentOutput, -1.0);
+				ballControl.set(ControlMode.PercentOutput, 0);
 			}
 			else {
-				collector.set(-1.0);
-				ballControl.set(-1.0);
+				collector.set(ControlMode.PercentOutput, -1.0);
+				ballControl.set(ControlMode.PercentOutput, -1.0);
 			}
 			grabCount = 0;
 		} else {
-			collector.set(0);
-			ballControl.set(0);
+			collector.set(ControlMode.PercentOutput, 0);
+			ballControl.set(ControlMode.PercentOutput, 0);
 			grabCount = 0;
 		}
 	}
@@ -1066,20 +1073,20 @@ public class Robot extends IterativeRobot implements PIDOutput {
 											// down
 		if (moveArm > 0) { // check for bottom limit switch
 			if (armLimit.get()) {
-				arm.set(0);
+				arm.set(ControlMode.PercentOutput, 0);
 			} else
-				arm.set(moveArm);
+				arm.set(ControlMode.PercentOutput, moveArm);
 		}
 		/*
 		else if (moveArm < 0) { //don't go past climbing position
 			if (armUpLimit.get()&&driveStick.getRawButton(1)) {
-				arm.set(0);
+				arm.set(ControlMode.PercentOutput, 0);
 			}
 			else arm.set(moveArm);
 		}
 		*/
 		else
-			arm.set(moveArm);
+			arm.set(ControlMode.PercentOutput, moveArm);
 	}
 
 	void controlShooterAngle() {
@@ -1091,15 +1098,15 @@ public class Robot extends IterativeRobot implements PIDOutput {
 		//		else 
 //		if (!driveStick.getRawButton(5) && !driveStick.getRawButton(6))  {
 			if (funStick.getRawButton(6)) { // want steeper shoot angle
-				// if (launchAngle.getAverageVoltage() < 2.3) shootAngle.set(0);
+				// if (launchAngle.getAverageVoltage() < 2.3) shootAngle.set(ControlMode.PercentOutput, 0);
 				// else
-				shootAngle.set(-0.4);
+				shootAngle.set(ControlMode.PercentOutput, -0.4);
 			} else if (funStick.getRawButton(7)) { // want shallower shoot angle
-				// if (launchAngle.getAverageVoltage() > 4.0) shootAngle.set(0);
+				// if (launchAngle.getAverageVoltage() > 4.0) shootAngle.set(ControlMode.PercentOutput, 0);
 				// else
-				shootAngle.set(0.4);
+				shootAngle.set(ControlMode.PercentOutput, 0.4);
 			} else
-				shootAngle.set(0);
+				shootAngle.set(ControlMode.PercentOutput, 0);
 
 		}
 //	}
@@ -1108,46 +1115,46 @@ public class Robot extends IterativeRobot implements PIDOutput {
 		double currentAngle = launchAngle.getAverageVoltage();
 
 		if (currentAngle - setAngle > 0.2) {
-			// if (currentAngle < 2.3) shootAngle.set(0);
+			// if (currentAngle < 2.3) shootAngle.set(ControlMode.PercentOutput, 0);
 			// else
-			shootAngle.set(-0.8);
+			shootAngle.set(ControlMode.PercentOutput, -0.8);
 		} else if (currentAngle - setAngle > 0.02) {
-			// if (currentAngle < 2.3) shootAngle.set(0);
+			// if (currentAngle < 2.3) shootAngle.set(ControlMode.PercentOutput, 0);
 			// else
-			shootAngle.set(-0.35);
+			shootAngle.set(ControlMode.PercentOutput, -0.35);
 		} else if (currentAngle - setAngle < -0.2) {
-			// if (currentAngle > 4.0) shootAngle.set(0);
+			// if (currentAngle > 4.0) shootAngle.set(ControlMode.PercentOutput, 0);
 			// else
-			shootAngle.set(0.8);
+			shootAngle.set(ControlMode.PercentOutput, 0.8);
 		} else if (currentAngle - setAngle < -0.02) {
-			// if (currentAngle > 4.0) shootAngle.set(0);
+			// if (currentAngle > 4.0) shootAngle.set(ControlMode.PercentOutput, 0);
 			// else
-			shootAngle.set(0.35);
+			shootAngle.set(ControlMode.PercentOutput, 0.35);
 		} else
-			shootAngle.set(0.0);
+			shootAngle.set(ControlMode.PercentOutput, 0.0);
 	}
 
 	void controlScalingArms() {
 //		if (funStick.getRawButton(8)&&(!tapeSensor.get()||funStick.getRawButton(1))){
-//			scaleL.set(0);
-//			scaleR.set(-1.0);
+//			scaleL.set(ControlMode.PercentOutput, 0);
+//			scaleR.set(ControlMode.PercentOutput, -1.0);
 //		} else if (funStick.getRawButton(9)) { // lift robot
-//			scaleL.set(-1.0);
-//			scaleR.set(0);
+//			scaleL.set(ControlMode.PercentOutput, -1.0);
+//			scaleR.set(ControlMode.PercentOutput, 0);
 //		} else {
-//			scaleL.set(0);
-//			scaleR.set(0);
+//			scaleL.set(ControlMode.PercentOutput, 0);
+//			scaleR.set(ControlMode.PercentOutput, 0);
 //		}
 	}
 
 	void reverseWinch() {
 //		if (funStick.getRawButton(10)) {
-//			scaleL.set(0.4);
+//			scaleL.set(ControlMode.PercentOutput, 0.4);
 //		}
 //		else if(funStick.getRawButton(11)){
-//			scaleL.set(-0.4);
+//			scaleL.set(ControlMode.PercentOutput, -0.4);
 //		}else
-//			scaleL.set(0);
+//			scaleL.set(ControlMode.PercentOutput, 0);
 	}
 
 	boolean turnRobot(double setBearing) {
@@ -1329,23 +1336,23 @@ public class Robot extends IterativeRobot implements PIDOutput {
 	boolean moveArmUp(double setPointUp) {
 		double currentArm = armPot.getAverageVoltage();
 		if (setPointUp > currentArm) {
-			arm.set(-1.0);
+			arm.set(ControlMode.PercentOutput, -1.0);
 			return false;
 		} else {
-			arm.set(0);
+			arm.set(ControlMode.PercentOutput, 0);
 			return true;
 		}
 	}
 
 	boolean moveArmDown() {
 		if (armLimit.get()) {
-			arm.set(0);
+			arm.set(ControlMode.PercentOutput, 0);
 			return true;
 //		} else if (armPot.getAverageVoltage() < 2.15) {
-//			arm.set(0.75);
+//			arm.set(ControlMode.PercentOutput, 0.75);
 //			return false;
 		} else {
-			arm.set(1.0);
+			arm.set(ControlMode.PercentOutput, 1.0);
 			return false;
 		}
 	}
@@ -1419,7 +1426,7 @@ public class Robot extends IterativeRobot implements PIDOutput {
 	public int getAuto()
 	{
 		int choice=0;
-		choice=(int)SmartDashboard.getNumber("autoChoice");
+		choice=(int)SmartDashboard.getNumber("autoChoice",0);
 		if(choice==NAK) choice = autoFile.readAutoFile();
 		return choice;
 	}
@@ -1503,13 +1510,13 @@ public class Robot extends IterativeRobot implements PIDOutput {
 		case 2:
 			moveArmDown();
 			setShooterAngle(aimAngle);
-			collector.set(1.0);
+			collector.set(ControlMode.PercentOutput, 1.0);
 			double power = loopCount * .05;
 			if (power > 0.5) {
 				driveStraight.setPID(.04, 0.00005, .03);
 				driveStraight.setSetpoint(0);
 				direction = 0.5;
-				shootAngle.set(0);
+				shootAngle.set(ControlMode.PercentOutput, 0);
 				driveStraight.enable();
 				autoStep = 3;
 			} else
@@ -1517,7 +1524,7 @@ public class Robot extends IterativeRobot implements PIDOutput {
 			break;
 		case 3:
 			moveArmDown();
-			collector.set(1.0);
+			collector.set(ControlMode.PercentOutput, 1.0);
 			if (navX.getRoll() > 9) {
 				autoStep = 4;
 			}
@@ -1529,7 +1536,7 @@ public class Robot extends IterativeRobot implements PIDOutput {
 			break;
 		case 4:
 			moveArmDown();
-			collector.set(1.0);
+			collector.set(ControlMode.PercentOutput, 1.0);
 			if (navX.getRoll() < -8) {
 				autoStep = 5;
 				direction = 0.35;
@@ -1542,7 +1549,7 @@ public class Robot extends IterativeRobot implements PIDOutput {
 			break;
 		case 5:
 			moveArmDown();
-			collector.set(1.0);
+			collector.set(ControlMode.PercentOutput, 1.0);
 			if (navX.getRoll() > rollOffset - 1.5) {
 				floorCount++;
 				if (floorCount == 2) {
@@ -1555,15 +1562,15 @@ public class Robot extends IterativeRobot implements PIDOutput {
 			}
 			break;
 		case 6:
-			if (autoTimer.get() > 1.5) arm.set(0);
-			else	arm.set(-1);
-			collector.set(0);
+			if (autoTimer.get() > 1.5) arm.set(ControlMode.PercentOutput, 0);
+			else	arm.set(ControlMode.PercentOutput, -1);
+			collector.set(ControlMode.PercentOutput, 0);
 			if (distanceR.getRaw() > 9700) {
 				driveStraight.disable();
 				turnSum = 0;
 				lastOffYaw = 0;
 				autoTimer.reset();
-				arm.set(0);
+				arm.set(ControlMode.PercentOutput, 0);
 				autoStep = 7;
 				loopCount = 0;
 			}
@@ -1588,8 +1595,8 @@ public class Robot extends IterativeRobot implements PIDOutput {
 						loopCount = 0;
 						lastOffYaw = 0;
 						autoTimer.reset();
-						arm.set(0);
-						shootAngle.set(0);
+						arm.set(ControlMode.PercentOutput, 0);
+						shootAngle.set(ControlMode.PercentOutput, 0);
 					}
 				}
 			} else
@@ -1601,8 +1608,8 @@ public class Robot extends IterativeRobot implements PIDOutput {
 				autoStep = 9;
 			}
 			else if (autoTimer.get() > 4.0) autoStep = 9;
-	//		shooterA.set(0.87);
-	//		shooterB.set(-0.76);
+	//		shooterA.set(ControlMode.PercentOutput, 0.87);
+	//		shooterB.set(ControlMode.PercentOutput, -0.76);
 	//		if (autoTimer.get() > 2.0) {
 	//			autoStep = 9;
 	//		}
@@ -1611,7 +1618,7 @@ public class Robot extends IterativeRobot implements PIDOutput {
 		case 9:
 			autoShooterSpeedControl();
 //			if (autoTimer.get() > 2.5) {
-			ballControl.set(1.0);
+			ballControl.set(ControlMode.PercentOutput, 1.0);
 //			}
 			if (autoTimer.get() > 7.0) {
 				autoStep = 10;
@@ -1620,9 +1627,9 @@ public class Robot extends IterativeRobot implements PIDOutput {
 			break;
 		case 10:
 
-			ballControl.set(0);
-			shooterA.set(0);
-			shooterB.set(0);
+			ballControl.set(ControlMode.PercentOutput, 0);
+			shooterA.set(ControlMode.PercentOutput, 0);
+			shooterB.set(ControlMode.PercentOutput, 0);
 			autoStep = 11;
 			driveRobot(0, 0);
 			break;
@@ -1654,7 +1661,7 @@ public class Robot extends IterativeRobot implements PIDOutput {
 							autoStep = 8;
 							loopCount = 0;
 							autoTimer.reset();
-							shootAngle.set(0);
+							shootAngle.set(ControlMode.PercentOutput, 0);
 						}
 					}
 				}
@@ -1688,7 +1695,7 @@ public class Robot extends IterativeRobot implements PIDOutput {
 		case 2:
 			moveArmDown();
 			setShooterAngle(aimAngle);
-			collector.set(1.0);
+			collector.set(ControlMode.PercentOutput, 1.0);
 			overDefenses();
 			if (defenseStep == 5) {
 				autoStep = 3;
@@ -1696,14 +1703,14 @@ public class Robot extends IterativeRobot implements PIDOutput {
 			}
 			break;
 		case 3:
-			collector.set(0.0);
+			collector.set(ControlMode.PercentOutput, 0.0);
 			if (distanceR.getRaw() > 12850) {
 				driveStraight.disable();
 				turnSum = 0;
 				lastOffYaw = 0;
 				autoStep = 4;
 				loopCount = 0;
-				arm.set(0);
+				arm.set(ControlMode.PercentOutput, 0);
 				driveRobot(0, 0);
 			}
 			break;
@@ -1723,7 +1730,7 @@ public class Robot extends IterativeRobot implements PIDOutput {
 						autoStep = 9;
 						loopCount = 0;
 						autoTimer.reset();
-						shootAngle.set(0);
+						shootAngle.set(ControlMode.PercentOutput, 0);
 						turnSum = 0;
 						turnCount = 0;
 						lastOffYaw = 0;
@@ -1733,8 +1740,8 @@ public class Robot extends IterativeRobot implements PIDOutput {
 				driveRobot(0, 0);
 			break;
 		case 5:
-			//		shooterA.set(0.87);
-			//		shooterB.set(-0.76);
+			//		shooterA.set(ControlMode.PercentOutput, 0.87);
+			//		shooterB.set(ControlMode.PercentOutput, -0.76);
 			onSpeed = autoShooterSpeedControl();
 			if (onSpeed && autoTimer.get()>2.0 )   {
 				//		if (autoTimer.get() > 2.0) {
@@ -1745,7 +1752,7 @@ public class Robot extends IterativeRobot implements PIDOutput {
 			break;
 		case 6:
 			autoShooterSpeedControl();
-			ballControl.set(1.0);
+			ballControl.set(ControlMode.PercentOutput, 1.0);
 			if (autoTimer.get() > 7.0) {
 				autoStep = 7;
 			}
@@ -1753,9 +1760,9 @@ public class Robot extends IterativeRobot implements PIDOutput {
 			break;
 		case 7:
 
-			ballControl.set(0);
-			shooterA.set(0);
-			shooterB.set(0);
+			ballControl.set(ControlMode.PercentOutput, 0);
+			shooterA.set(ControlMode.PercentOutput, 0);
+			shooterB.set(ControlMode.PercentOutput, 0);
 			autoStep = 8;
 			driveRobot(0, 0);
 			break;
@@ -1787,7 +1794,7 @@ break;
 							autoStep = 5;
 							loopCount = 0;
 							autoTimer.reset();
-							shootAngle.set(0);
+							shootAngle.set(ControlMode.PercentOutput, 0);
 						}
 					}
 				}
@@ -1825,7 +1832,7 @@ break;
 		case 2:
 			moveArmDown();
 			setShooterAngle(aimAngle);
-			collector.set(1.0);
+			collector.set(ControlMode.PercentOutput, 1.0);
 			overDefenses();
 			if (defenseStep == 5) {
 				autoStep = 3;
@@ -1833,14 +1840,14 @@ break;
 			}
 			break;
 		case 3:
-			collector.set(0.0);
+			collector.set(ControlMode.PercentOutput, 0.0);
 			if (distanceR.getRaw() > 6600) {
 				driveStraight.disable();
 				turnSum = 0;
 				lastOffYaw = 0;
 				autoStep = 4;
 				loopCount = 0;
-				arm.set(0);
+				arm.set(ControlMode.PercentOutput, 0);
 				driveRobot(0, 0);
 			}
 			break;
@@ -1860,7 +1867,7 @@ break;
 						autoStep = 9;
 						loopCount = 0;
 						autoTimer.reset();
-						shootAngle.set(0);
+						shootAngle.set(ControlMode.PercentOutput, 0);
 						turnCount = 0;
 						turnSum = 0;
 						lastOffYaw = 0;
@@ -1870,8 +1877,8 @@ break;
 				driveRobot(0, 0);
 			break;
 		case 5:
-			//		shooterA.set(0.87);
-			//		shooterB.set(-0.76);
+			//		shooterA.set(ControlMode.PercentOutput, 0.87);
+			//		shooterB.set(ControlMode.PercentOutput, -0.76);
 			onSpeed = autoShooterSpeedControl();
 			if (onSpeed && autoTimer.get()>2.0) {
 				//		if (autoTimer.get() > 2.0) {
@@ -1882,7 +1889,7 @@ break;
 			break;
 		case 6:
 			autoShooterSpeedControl();
-			ballControl.set(1.0);
+			ballControl.set(ControlMode.PercentOutput, 1.0);
 			if (autoTimer.get() > 7.0) {
 				autoStep = 7;
 			}
@@ -1890,9 +1897,9 @@ break;
 			break;
 		case 7:
 
-			ballControl.set(0);
-			shooterA.set(0);
-			shooterB.set(0);
+			ballControl.set(ControlMode.PercentOutput, 0);
+			shooterA.set(ControlMode.PercentOutput, 0);
+			shooterB.set(ControlMode.PercentOutput, 0);
 			autoStep = 8;
 			driveRobot(0, 0);
 			break;
@@ -1923,7 +1930,7 @@ break;
 							autoStep = 5;
 							loopCount = 0;
 							autoTimer.reset();
-							shootAngle.set(0);
+							shootAngle.set(ControlMode.PercentOutput, 0);
 						}
 					}
 				}
@@ -1954,14 +1961,14 @@ break;
 				driveStraight.setPID(.04, 0.00005, .03);
 				driveStraight.setSetpoint(0);				
 				driveStraight.enable();
-				shootAngle.set(0);
+				shootAngle.set(ControlMode.PercentOutput, 0);
 				autoStep = 3;
 			} else
 				driveRobot(power, power);
 			break;
 		case 3:
 			moveArmDown();
-			collector.set(1.0);
+			collector.set(ControlMode.PercentOutput, 1.0);
 			if (navX.getRoll() > 12) {
 				autoStep = 4;
 			}
@@ -1973,7 +1980,7 @@ break;
 			break;
 		case 4:
 			moveArmDown();
-			collector.set(1.0);
+			collector.set(ControlMode.PercentOutput, 1.0);
 			
 			double nowRoll = navX.getRoll();
 			if (nowRoll > maxRoll)
@@ -1988,7 +1995,7 @@ break;
 			break;
 		case 5:
 			moveArmDown();
-			collector.set(1.0);
+			collector.set(ControlMode.PercentOutput, 1.0);
 			if (navX.getRoll() > rollOffset - 0.7) {
 				floorCount++;
 				if (floorCount == 1) {
@@ -2005,9 +2012,9 @@ break;
 
 			break;
 		case 6:
-			collector.set(0.0);
+			collector.set(ControlMode.PercentOutput, 0.0);
 			setShooterAngle(aimAngle);
-			arm.set(0);
+			arm.set(ControlMode.PercentOutput, 0);
 			if (loopCount == 10) {
 				turnToAngle = 25.0;
 				turnRobot(turnToAngle);
@@ -2023,7 +2030,7 @@ break;
 						direction = 0.5;
 						driveStraight.setSetpoint(25.0);
 						driveStraight.enable();
-						shootAngle.set(0);
+						shootAngle.set(ControlMode.PercentOutput, 0);
 					}
 				}
 			} else
@@ -2052,7 +2059,7 @@ break;
 						autoStep = 9;
 						loopCount = 0;
 						autoTimer.reset();
-						shootAngle.set(0);
+						shootAngle.set(ControlMode.PercentOutput, 0);
 					}
 				}
 			} else
@@ -2061,8 +2068,8 @@ break;
 		case 9:
 			onSpeed = autoShooterSpeedControl();
 			if (onSpeed || autoTimer.get() > 4.0) {
-//			shooterA.set(0.87);
-//			shooterB.set(-0.76);
+//			shooterA.set(ControlMode.PercentOutput, 0.87);
+//			shooterB.set(ControlMode.PercentOutput, -0.76);
 //			if (autoTimer.get() > 2.0) {
 				autoStep = 10;
 			}
@@ -2070,7 +2077,7 @@ break;
 			break;
 		case 10:
 			autoShooterSpeedControl();
-			ballControl.set(1.0);
+			ballControl.set(ControlMode.PercentOutput, 1.0);
 			if (autoTimer.get() > 6.0) {
 				autoStep = 11;
 			}
@@ -2078,9 +2085,9 @@ break;
 			break;
 		case 11:
 
-			ballControl.set(0);
-			shooterA.set(0);
-			shooterB.set(0);
+			ballControl.set(ControlMode.PercentOutput, 0);
+			shooterA.set(ControlMode.PercentOutput, 0);
+			shooterB.set(ControlMode.PercentOutput, 0);
 			autoStep = 12;
 			driveRobot(0, 0);
 			break;
@@ -2115,7 +2122,7 @@ break;
 		case 2:
 			moveArmDown();
 			setShooterAngle(aimAngle);
-			collector.set(1.0);
+			collector.set(ControlMode.PercentOutput, 1.0);
 			overDefenses();
 			if (defenseStep == 5) {
 				autoStep = 3;
@@ -2123,14 +2130,14 @@ break;
 			}
 			break;
 		case 3:
-			collector.set(0.0);
+			collector.set(ControlMode.PercentOutput, 0.0);
 			if (distanceR.getRaw() > 8400) {
 				driveStraight.disable();
 				turnSum = 0;
 				lastOffYaw = 0;
 				autoStep = 4;
 				loopCount = 0;
-				arm.set(0);
+				arm.set(ControlMode.PercentOutput, 0);
 				driveRobot(0, 0);
 			}
 			break;
@@ -2150,7 +2157,7 @@ break;
 						autoStep = 9;
 						loopCount = 0;
 						autoTimer.reset();
-						shootAngle.set(0);
+						shootAngle.set(ControlMode.PercentOutput, 0);
 						turnCount = 0;
 						turnSum = 0;
 						lastOffYaw = 0;
@@ -2160,8 +2167,8 @@ break;
 				driveRobot(0, 0);
 			break;
 		case 5:
-			//		shooterA.set(0.87);
-			//		shooterB.set(-0.76);
+			//		shooterA.set(ControlMode.PercentOutput, 0.87);
+			//		shooterB.set(ControlMode.PercentOutput, -0.76);
 			onSpeed = autoShooterSpeedControl();
 			if (onSpeed && autoTimer.get()>2.0) {
 				//		if (autoTimer.get() > 2.0) {
@@ -2173,7 +2180,7 @@ break;
 		case 6:
 			autoShooterSpeedControl();
 			if (autoTimer.get() > 2.5) {
-			ballControl.set(1.0);
+			ballControl.set(ControlMode.PercentOutput, 1.0);
 			}
 			if (autoTimer.get() > 7.0) {
 				autoStep = 7;
@@ -2182,9 +2189,9 @@ break;
 			break;
 		case 7:
 
-			ballControl.set(0);
-			shooterA.set(0);
-			shooterB.set(0);
+			ballControl.set(ControlMode.PercentOutput, 0);
+			shooterA.set(ControlMode.PercentOutput, 0);
+			shooterB.set(ControlMode.PercentOutput, 0);
 			autoStep = 8;
 			driveRobot(0, 0);
 			break;
@@ -2216,7 +2223,7 @@ break;
 							autoStep = 5;
 							loopCount = 0;
 							autoTimer.reset();
-							shootAngle.set(0);
+							shootAngle.set(ControlMode.PercentOutput, 0);
 						}
 					}
 				}
@@ -2252,7 +2259,7 @@ break;
 		case 2:
 			moveArmDown();
 			setShooterAngle(aimAngle);
-			collector.set(1.0);
+			collector.set(ControlMode.PercentOutput, 1.0);
 			overDefenses();
 			if (defenseStep == 5) {
 				autoStep = 3;
@@ -2260,14 +2267,14 @@ break;
 			}
 			break;
 		case 3:
-			collector.set(0.0);
+			collector.set(ControlMode.PercentOutput, 0.0);
 			if (distanceR.getRaw() > 14900) {
 				driveStraight.disable();
 				turnSum = 0;
 				lastOffYaw = 0;
 				autoStep = 4;
 				loopCount = 0;
-				arm.set(0);
+				arm.set(ControlMode.PercentOutput, 0);
 				driveRobot(0, 0);
 			}
 			break;
@@ -2287,7 +2294,7 @@ break;
 						autoStep = 9;
 						loopCount = 0;
 						autoTimer.reset();
-						shootAngle.set(0);
+						shootAngle.set(ControlMode.PercentOutput, 0);
 						lastOffYaw = 0;
 						turnSum = 0;
 						turnCount = 0;
@@ -2297,8 +2304,8 @@ break;
 				driveRobot(0, 0);
 			break;
 		case 5:
-			//		shooterA.set(0.87);
-			//		shooterB.set(-0.76);
+			//		shooterA.set(ControlMode.PercentOutput, 0.87);
+			//		shooterB.set(ControlMode.PercentOutput, -0.76);
 			onSpeed = autoShooterSpeedControl();
 			if (onSpeed && autoTimer.get()>2.0) {
 				//		if (autoTimer.get() > 2.0) {
@@ -2309,7 +2316,7 @@ break;
 			break;
 		case 6:
 			autoShooterSpeedControl();
-			ballControl.set(1.0);
+			ballControl.set(ControlMode.PercentOutput, 1.0);
 			if (autoTimer.get() > 7.0) {
 				autoStep = 7;
 			}
@@ -2317,9 +2324,9 @@ break;
 			break;
 		case 7:
 
-			ballControl.set(0);
-			shooterA.set(0);
-			shooterB.set(0);
+			ballControl.set(ControlMode.PercentOutput, 0);
+			shooterA.set(ControlMode.PercentOutput, 0);
+			shooterB.set(ControlMode.PercentOutput, 0);
 			autoStep = 8;
 			driveRobot(0, 0);
 			break;
@@ -2351,7 +2358,7 @@ break;
 							autoStep = 5;
 							loopCount = 0;
 							autoTimer.reset();
-							shootAngle.set(0);
+							shootAngle.set(ControlMode.PercentOutput, 0);
 						}
 					}
 				}
@@ -2374,7 +2381,7 @@ break;
 			break;
 		case 2:
 			moveArmDown();
-			collector.set(1.0);
+			collector.set(ControlMode.PercentOutput, 1.0);
 			double power = loopCount * .05;
 			if (power > 0.5) {
 				driveStraight.setPID(.04, 0.00005, .03);
@@ -2387,7 +2394,7 @@ break;
 			break;
 		case 3:
 			moveArmDown();
-			collector.set(1.0);
+			collector.set(ControlMode.PercentOutput, 1.0);
 			if (navX.getRoll() > 9) {
 				autoStep = 4;
 			}
@@ -2399,7 +2406,7 @@ break;
 			break;
 		case 4:
 			moveArmDown();
-			collector.set(1.0);
+			collector.set(ControlMode.PercentOutput, 1.0);
 			if (navX.getRoll() < -8) {
 				autoStep = 5;
 				direction = 0.35;
@@ -2412,7 +2419,7 @@ break;
 			break;
 		case 5:
 			moveArmDown();
-			collector.set(1.0);
+			collector.set(ControlMode.PercentOutput, 1.0);
 			if (navX.getRoll() > rollOffset - 0.6) {
 				floorCount++;
 				if (floorCount == 2) {
@@ -2425,7 +2432,7 @@ break;
 			break;
 		case 6:
 			// moveArmUp(armCheval);
-			collector.set(0);
+			collector.set(ControlMode.PercentOutput, 0);
 			if (distanceR.getRaw() > 10000) {
 				driveStraight.disable();
 				turnSum = 0;
@@ -2456,7 +2463,7 @@ break;
 						direction = -0.7;
 						driveStraight.enable();
 						loopCount = 0;
-						arm.set(0);
+						arm.set(ControlMode.PercentOutput, 0);
 						autoTimer.reset();
 					}
 				}
@@ -2485,8 +2492,8 @@ break;
 			}
 			break;
 		case 10:
-			collector.set(-1.0);
-			ballControl.set(-1.0);
+			collector.set(ControlMode.PercentOutput, -1.0);
+			ballControl.set(ControlMode.PercentOutput, -1.0);
 			driveRobot(0, 0);
 			if (loopCount == 100) {
 				autoStep = 11;
@@ -2494,8 +2501,8 @@ break;
 			}
 			break;
 		case 11:
-			collector.set(0);
-			ballControl.set(0);
+			collector.set(ControlMode.PercentOutput, 0);
+			ballControl.set(ControlMode.PercentOutput, 0);
 			driveRobot(0, 0);
 			break;
 		case 12:
@@ -2525,7 +2532,7 @@ break;
 		case 2:
 			moveArmDown();
 //			setShooterAngle(2.9);
-			collector.set(1.0);
+			collector.set(ControlMode.PercentOutput, 1.0);
 			overDefenses();
 			if (defenseStep == 5) {
 				autoStep = 3;
@@ -2533,13 +2540,13 @@ break;
 			}
 			break;
 		case 3:
-			collector.set(0.0);
+			collector.set(ControlMode.PercentOutput, 0.0);
 			if (distanceR.getRaw() > 15000) {
 				driveStraight.disable();
 //				turnSum = 0;
 				autoStep = 4;
 				loopCount = 0;
-				arm.set(0);
+				arm.set(ControlMode.PercentOutput, 0);
 				autoTimer.reset();
 	//			driveRobot(0, 0);
 			}
@@ -2579,7 +2586,7 @@ break;
 					turnCount++;
 					if (turnCount > 7) {
 						autoStep = 7;
-						shootAngle.set(0);
+						shootAngle.set(ControlMode.PercentOutput, 0);
 						autoTimer.reset();
 						distanceL.reset();
 						distanceR.reset();
@@ -2599,8 +2606,8 @@ break;
 			break;
 		
 		case 8:
-			collector.set(-1.0);
-			ballControl.set(-1.0);
+			collector.set(ControlMode.PercentOutput, -1.0);
+			ballControl.set(ControlMode.PercentOutput, -1.0);
 			driveRobot(0, 0);
 			if (loopCount == 100) {
 				autoStep = 9;
@@ -2608,8 +2615,8 @@ break;
 			}
 			break;
 		case 9:
-			collector.set(0);
-			ballControl.set(0);
+			collector.set(ControlMode.PercentOutput, 0);
+			ballControl.set(ControlMode.PercentOutput, 0);
 			driveRobot(0, 0);
 			break;
 		default:
@@ -2639,7 +2646,7 @@ break;
 		case 2:
 			moveArmDown();
 //			setShooterAngle(2.9);
-			collector.set(1.0);
+			collector.set(ControlMode.PercentOutput, 1.0);
 			overDefenses();
 			if (defenseStep == 5) {
 				autoStep = 3;
@@ -2647,13 +2654,13 @@ break;
 			}
 			break;
 		case 3:
-			collector.set(0.0);
+			collector.set(ControlMode.PercentOutput, 0.0);
 			if (distanceR.getRaw() > 15000) {
 				driveStraight.disable();
 //				turnSum = 0;
 				autoStep = 4;
 				loopCount = 0;
-				arm.set(0);
+				arm.set(ControlMode.PercentOutput, 0);
 				autoTimer.reset();
 	//			driveRobot(0, 0);
 			}
@@ -2693,7 +2700,7 @@ break;
 					turnCount++;
 					if (turnCount > 7) {
 						autoStep = 7;
-						shootAngle.set(0);
+						shootAngle.set(ControlMode.PercentOutput, 0);
 						autoTimer.reset();
 						distanceL.reset();
 						distanceR.reset();
@@ -2713,8 +2720,8 @@ break;
 			break;
 		
 		case 8:
-			collector.set(-1.0);
-			ballControl.set(-1.0);
+			collector.set(ControlMode.PercentOutput, -1.0);
+			ballControl.set(ControlMode.PercentOutput, -1.0);
 			driveRobot(0, 0);
 			if (loopCount == 100) {
 				autoStep = 9;
@@ -2722,8 +2729,8 @@ break;
 			}
 			break;
 		case 9:
-			collector.set(0);
-			ballControl.set(0);
+			collector.set(ControlMode.PercentOutput, 0);
+			ballControl.set(ControlMode.PercentOutput, 0);
 			driveRobot(0, 0);
 			break;
 		default:
@@ -2747,13 +2754,13 @@ break;
 		case 2:
 			moveArmDown();
 			setShooterAngle(3.78);
-			collector.set(1.0);
+			collector.set(ControlMode.PercentOutput, 1.0);
 			double power = loopCount * .05;
 			if (power > 0.5) {
 				driveStraight.setPID(.04, 0.00005, .03);
 				driveStraight.setSetpoint(0);
 				direction = 0.5;
-				shootAngle.set(0);
+				shootAngle.set(ControlMode.PercentOutput, 0);
 				driveStraight.enable();
 				autoStep = 3;
 			} else
@@ -2761,7 +2768,7 @@ break;
 			break;
 		case 3:
 			moveArmDown();
-			collector.set(1.0);
+			collector.set(ControlMode.PercentOutput, 1.0);
 			if (navX.getRoll() > 9) {
 				autoStep = 4;
 			}
@@ -2773,7 +2780,7 @@ break;
 			break;
 		case 4:
 			moveArmDown();
-			collector.set(1.0);
+			collector.set(ControlMode.PercentOutput, 1.0);
 			if (navX.getRoll() < -8) {
 				autoStep = 5;
 				direction = 0.35;
@@ -2786,7 +2793,7 @@ break;
 			break;
 		case 5:
 			moveArmDown();
-			collector.set(1.0);
+			collector.set(ControlMode.PercentOutput, 1.0);
 			if (navX.getRoll() > rollOffset - 0.6) {
 				floorCount++;
 				if (floorCount == 2) {
@@ -2799,7 +2806,7 @@ break;
 			break;
 		case 6:
 			moveArmUp(3.0);
-			collector.set(0);
+			collector.set(ControlMode.PercentOutput, 0);
 			if (distanceR.getRaw() > 10000) {
 				driveStraight.disable();
 				turnSum = 0;
@@ -2836,7 +2843,7 @@ break;
 		case 2:
 			moveArmDown();
 //			setShooterAngle(2.94);
-			collector.set(1.0);
+			collector.set(ControlMode.PercentOutput, 1.0);
 			overDefenses();
 			if (defenseStep == 5) {
 				autoStep = 3;
@@ -2844,13 +2851,13 @@ break;
 			}
 			break;
 		case 3:
-			collector.set(0.0);
+			collector.set(ControlMode.PercentOutput, 0.0);
 			if (distanceR.getRaw() > 7000) {
 				driveStraight.disable();
 				//				turnSum = 0;
 				autoStep = 4;
 				//				loopCount = 0;
-				arm.set(0);
+				arm.set(ControlMode.PercentOutput, 0);
 				autoTimer.reset();
 				driveRobot(0, 0);
 			}
@@ -2885,7 +2892,7 @@ break;
 			break;
 		case 3:
 			moveArmDown();
-			collector.set(1.0);
+			collector.set(ControlMode.PercentOutput, 1.0);
 			if (navX.getRoll() > 12) {
 				autoStep = 4;
 			}
@@ -2897,7 +2904,7 @@ break;
 			break;
 		case 4:
 			moveArmDown();
-			collector.set(1.0);
+			collector.set(ControlMode.PercentOutput, 1.0);
 			
 			double nowRoll = navX.getRoll();
 			if (nowRoll > maxRoll)
@@ -2912,7 +2919,7 @@ break;
 				break;
 		case 5:
 			moveArmDown();
-			collector.set(1.0);
+			collector.set(ControlMode.PercentOutput, 1.0);
 			if (navX.getRoll() > rollOffset - 0.7) {
 				floorCount++;
 				if (floorCount == 2) {
@@ -2924,14 +2931,14 @@ break;
 			}
 			break;
 		case 6:
-			collector.set(0.0);
+			collector.set(ControlMode.PercentOutput, 0.0);
 			if (distanceR.getRaw() > 13500) {
 				driveStraight.disable();
 				turnSum = 0;
 				lastOffYaw = 0;
 				autoStep = 7;
 				loopCount = 0;
-				arm.set(0);
+				arm.set(ControlMode.PercentOutput, 0);
 				driveRobot(0, 0);
 			}
 			break;
@@ -2970,8 +2977,8 @@ break;
 
 			break;
 		case 10:
-			collector.set(-1.0);
-			ballControl.set(-1.0);
+			collector.set(ControlMode.PercentOutput, -1.0);
+			ballControl.set(ControlMode.PercentOutput, -1.0);
 			driveRobot(0, 0);
 			if (loopCount == 100) {
 				autoStep = 11;
@@ -2979,8 +2986,8 @@ break;
 			}
 			break;
 		case 11:
-			collector.set(0);
-			ballControl.set(0);
+			collector.set(ControlMode.PercentOutput, 0);
+			ballControl.set(ControlMode.PercentOutput, 0);
 			driveRobot(0, 0);
 			break;
 		case 12:
@@ -3012,7 +3019,7 @@ break;
 			break;
 		case 3:
 			moveArmDown();
-			collector.set(1.0);
+			collector.set(ControlMode.PercentOutput, 1.0);
 			if (navX.getRoll() > 12) {
 				autoStep = 4;
 			}
@@ -3024,7 +3031,7 @@ break;
 			break;
 		case 4:
 			moveArmDown();
-			collector.set(1.0);
+			collector.set(ControlMode.PercentOutput, 1.0);
 			
 			double nowRoll = navX.getRoll();
 			if (nowRoll > maxRoll)
@@ -3039,7 +3046,7 @@ break;
 			break;
 		case 5:
 			moveArmDown();
-			collector.set(1.0);
+			collector.set(ControlMode.PercentOutput, 1.0);
 			if (navX.getRoll() > rollOffset - 0.7) {
 				floorCount++;
 				if (floorCount == 1) {
@@ -3051,7 +3058,7 @@ break;
 			}
 			break;
 		case 6:
-			collector.set(0.0);
+			collector.set(ControlMode.PercentOutput, 0.0);
 			if (distanceR.getRaw() > 15600) {
 				driveStraight.disable();
 				turnSum = 0;
@@ -3059,7 +3066,7 @@ break;
 				autoStep = 7;
 				loopCount = 0;
 				driveRobot(0, 0);
-				arm.set(0);
+				arm.set(ControlMode.PercentOutput, 0);
 			}
 			break;
 		case 7:
@@ -3098,8 +3105,8 @@ break;
 
 			break;
 		case 10:
-			collector.set(-1.0);
-			ballControl.set(-1.0);
+			collector.set(ControlMode.PercentOutput, -1.0);
+			ballControl.set(ControlMode.PercentOutput, -1.0);
 			driveRobot(0, 0);
 			if (loopCount == 100) {
 				autoStep = 11;
@@ -3107,8 +3114,8 @@ break;
 			}
 			break;
 		case 11:
-			collector.set(0);
-			ballControl.set(0);
+			collector.set(ControlMode.PercentOutput, 0);
+			ballControl.set(ControlMode.PercentOutput, 0);
 			driveRobot(0, 0);
 			break;
 		case 12:
@@ -3138,13 +3145,13 @@ break;
 				direction = 0.6;
 				driveStraight.enable();
 				autoStep = 3;
-				shootAngle.set(0);
+				shootAngle.set(ControlMode.PercentOutput, 0);
 			} else
 				driveRobot(power, power);
 			break;
 		case 3:
 			moveArmDown();
-			collector.set(1.0);
+			collector.set(ControlMode.PercentOutput, 1.0);
 			if (navX.getRoll() > 12) {
 				autoStep = 4;
 			}
@@ -3156,7 +3163,7 @@ break;
 			break;
 		case 4:
 			moveArmDown();
-			collector.set(1.0);
+			collector.set(ControlMode.PercentOutput, 1.0);
 			
 			double nowRoll = navX.getRoll();
 			if (nowRoll > maxRoll)
@@ -3171,7 +3178,7 @@ break;
 			break;
 		case 5:
 			moveArmDown();
-			collector.set(1.0);
+			collector.set(ControlMode.PercentOutput, 1.0);
 			if (navX.getRoll() > rollOffset - 0.7) {
 				floorCount++;
 				if (floorCount == 1) {
@@ -3183,14 +3190,14 @@ break;
 			}
 			break;
 		case 6:
-			collector.set(0.0);
+			collector.set(ControlMode.PercentOutput, 0.0);
 			if (distanceR.getRaw() > 12850) {
 				driveStraight.disable();
 				turnSum = 0;
 				lastOffYaw = 0;
 				autoStep = 7;
 				loopCount = 0;
-				arm.set(0);
+				arm.set(ControlMode.PercentOutput, 0);
 				driveRobot(0, 0);
 			}
 			break;
@@ -3209,7 +3216,7 @@ break;
 					if (turnCount > 7) {
 						autoStep = 8;
 						loopCount = 0;
-						shootAngle.set(0);
+						shootAngle.set(ControlMode.PercentOutput, 0);
 						autoTimer.reset();
 						distanceL.reset();
 						distanceR.reset();
@@ -3223,13 +3230,13 @@ break;
 			if (onSpeed || autoTimer.get() > 4.0) {
 				autoStep = 9;
 			}
-//			shooterA.set(0.87);
-//			shooterB.set(-0.76);
+//			shooterA.set(ControlMode.PercentOutput, 0.87);
+//			shooterB.set(ControlMode.PercentOutput, -0.76);
 			
 		
 		case 9:
 			if (autoTimer.get() > 2.0) {
-				ballControl.set(1.0);
+				ballControl.set(ControlMode.PercentOutput, 1.0);
 			}
 			if (autoTimer.get() > 7.0) {
 				autoStep = 10;
@@ -3238,9 +3245,9 @@ break;
 			break;
 		case 10:
 
-			ballControl.set(0);
-			shooterA.set(0);
-			shooterB.set(0);
+			ballControl.set(ControlMode.PercentOutput, 0);
+			shooterA.set(ControlMode.PercentOutput, 0);
+			shooterB.set(ControlMode.PercentOutput, 0);
 			autoStep = 11;
 			driveRobot(0, 0);
 			break;
@@ -3271,13 +3278,13 @@ break;
 					direction = 0.6;
 					driveStraight.enable();
 					autoStep = 3;
-					shootAngle.set(0);
+					shootAngle.set(ControlMode.PercentOutput, 0);
 				} else
 					driveRobot(power, power);
 				break;
 			case 3:
 				moveArmDown();
-				collector.set(1.0);
+				collector.set(ControlMode.PercentOutput, 1.0);
 				if (navX.getRoll() > 12) {
 					autoStep = 4;
 				}
@@ -3289,7 +3296,7 @@ break;
 				break;
 			case 4:
 				moveArmDown();
-				collector.set(1.0);
+				collector.set(ControlMode.PercentOutput, 1.0);
 				
 				double nowRoll = navX.getRoll();
 				if (nowRoll > maxRoll)
@@ -3304,7 +3311,7 @@ break;
 				break;
 			case 5:
 				moveArmDown();
-				collector.set(1.0);
+				collector.set(ControlMode.PercentOutput, 1.0);
 				if (navX.getRoll() > rollOffset - 0.7) {
 					floorCount++;
 					if (floorCount == 1) {
@@ -3316,14 +3323,14 @@ break;
 				}
 				break;
 			case 6:
-				collector.set(0.0);
+				collector.set(ControlMode.PercentOutput, 0.0);
 				if (distanceR.getRaw() > 15700) {
 					driveStraight.disable();
 					turnSum = 0;
 					lastOffYaw = 0;
 					autoStep = 7;
 					loopCount = 0;
-					arm.set(0);
+					arm.set(ControlMode.PercentOutput, 0);
 					driveRobot(0, 0);
 				}
 				break;
@@ -3342,9 +3349,9 @@ break;
 						if (turnCount > 7) {
 							autoStep = 8;
 							loopCount = 0;
-							arm.set(0);
+							arm.set(ControlMode.PercentOutput, 0);
 							autoTimer.reset();
-							shootAngle.set(0);
+							shootAngle.set(ControlMode.PercentOutput, 0);
 							distanceL.reset();
 							distanceR.reset();
 						}
@@ -3358,8 +3365,8 @@ break;
 				if (onSpeed | autoTimer.get() > 4.0) {
 					autoStep = 9;
 				}
-	//			shooterA.set(0.87);
-	//			shooterB.set(-0.76);
+	//			shooterA.set(ControlMode.PercentOutput, 0.87);
+	//			shooterB.set(ControlMode.PercentOutput, -0.76);
 				if (distanceR.getRaw() < -600) {
 					driveRobot(0, 0);
 	//				autoStep = 9;
@@ -3371,7 +3378,7 @@ break;
 			case 9:
 				if (autoTimer.get() > 2.0) {
 					
-				ballControl.set(1.0);
+				ballControl.set(ControlMode.PercentOutput, 1.0);
 				}
 				if (autoTimer.get() > 6.0) {
 					autoStep = 10;
@@ -3380,9 +3387,9 @@ break;
 				break;
 			case 10:
 	
-				ballControl.set(0);
-				shooterA.set(0);
-				shooterB.set(0);
+				ballControl.set(ControlMode.PercentOutput, 0);
+				shooterA.set(ControlMode.PercentOutput, 0);
+				shooterB.set(ControlMode.PercentOutput, 0);
 				autoStep = 12;
 				driveRobot(0, 0);
 				break;
@@ -3414,7 +3421,7 @@ break;
 		case 2:
 			moveArmDown();
 			setShooterAngle(aimAngle);
-			collector.set(1.0);
+			collector.set(ControlMode.PercentOutput, 1.0);
 			overDefenses();
 			if (defenseStep == 5) {
 				driveStraight.disable();
@@ -3423,14 +3430,14 @@ break;
 				driveRobot(0,0);
 				loopCount = 0;
 				autoStep = 3;
-				collector.set(0.0);
+				collector.set(ControlMode.PercentOutput, 0.0);
 				turnCount = 0;
 			}
 			break;
 
 		case 3:
 			setShooterAngle(aimAngle);
-			arm.set(0);
+			arm.set(ControlMode.PercentOutput, 0);
 			if (loopCount == 10) {
 				// double sonarDist = moeSonar.getAverageVoltage();
 				// double newAngle = sonarDist/0.15 + 0.2;
@@ -3445,7 +3452,7 @@ break;
 						autoStep = 4;
 						loopCount = 0;
 						autoTimer.reset();
-						shootAngle.set(0);
+						shootAngle.set(ControlMode.PercentOutput, 0);
 					}
 				}
 			} else
@@ -3453,8 +3460,8 @@ break;
 			break;
 		case 4:
 		
-			//		shooterA.set(0.87);
-			//		shooterB.set(-0.76);
+			//		shooterA.set(ControlMode.PercentOutput, 0.87);
+			//		shooterB.set(ControlMode.PercentOutput, -0.76);
 			onSpeed = autoShooterSpeedControl();
 			if (onSpeed || autoTimer.get()>4.0) {
 				//		if (autoTimer.get() > 2.0) {
@@ -3465,7 +3472,7 @@ break;
 		case 5:
 			autoShooterSpeedControl();
 			if (autoTimer.get() > 2.3) {
-				ballControl.set(1.0);
+				ballControl.set(ControlMode.PercentOutput, 1.0);
 			}
 			if (ballSensor.get()) {
 				autoStep = 6;
@@ -3477,9 +3484,9 @@ break;
 			break;
 		case 6:
 			if (autoTimer.get() > 0.8) {
-			shooterA.set(0);
-			shooterB.set(0);
-			ballControl.set(0);
+			shooterA.set(ControlMode.PercentOutput, 0);
+			shooterB.set(ControlMode.PercentOutput, 0);
+			ballControl.set(ControlMode.PercentOutput, 0);
 			autoStep = 7;
 			}
 			break;
@@ -3532,7 +3539,7 @@ break;
 				driveStraight.disable();				
 				driveRobot(0,0);				
 				autoStep = 12;
-				collector.set(0.0);
+				collector.set(ControlMode.PercentOutput, 0.0);
 				
 				
 			}
@@ -3564,13 +3571,13 @@ break;
 		case 2:
 			moveArmDown();
 			setShooterAngle(aimAngle);
-			collector.set(1.0);
+			collector.set(ControlMode.PercentOutput, 1.0);
 			double power = loopCount * .05;
 			if (power > 0.5) {
 				driveStraight.setPID(.04, 0.00005, .03);
 				driveStraight.setSetpoint(0);
 				direction = 0.5;
-				shootAngle.set(0);
+				shootAngle.set(ControlMode.PercentOutput, 0);
 				driveStraight.enable();
 				autoStep = 3;
 			} else
@@ -3578,7 +3585,7 @@ break;
 			break;
 		case 3:
 			moveArmDown();
-			collector.set(1.0);
+			collector.set(ControlMode.PercentOutput, 1.0);
 			if (navX.getRoll() > 9) {
 				autoStep = 4;
 			}
@@ -3590,7 +3597,7 @@ break;
 			break;
 		case 4:
 			moveArmDown();
-			collector.set(1.0);
+			collector.set(ControlMode.PercentOutput, 1.0);
 			if (navX.getRoll() < -8) {
 				autoStep = 5;
 				direction = 0.35;
@@ -3603,7 +3610,7 @@ break;
 			break;
 		case 5:
 			moveArmDown();
-			collector.set(1.0);
+			collector.set(ControlMode.PercentOutput, 1.0);
 			if (navX.getRoll() > rollOffset - 0.6) {
 				floorCount++;
 				if (floorCount == 2) {
@@ -3616,14 +3623,14 @@ break;
 			}
 			break;
 		case 6:
-			if (autoTimer.get() > 1.5) arm.set(0);
-			else	arm.set(-1);
-			collector.set(0);
+			if (autoTimer.get() > 1.5) arm.set(ControlMode.PercentOutput, 0);
+			else	arm.set(ControlMode.PercentOutput, -1);
+			collector.set(ControlMode.PercentOutput, 0);
 			if (distanceR.getRaw() > 15000) {
 				driveStraight.disable();
 				turnSum = 0;
 				autoTimer.reset();
-				arm.set(0);
+				arm.set(ControlMode.PercentOutput, 0);
 				autoStep = 7;
 				loopCount = 0;
 			}
@@ -3661,7 +3668,7 @@ break;
 					turnCount++;
 					if (turnCount > 7) {
 						autoStep = 10;
-						shootAngle.set(0);
+						shootAngle.set(ControlMode.PercentOutput, 0);
 						loopCount = 0;
 						autoTimer.reset();
 						distanceL.reset();
@@ -3682,7 +3689,7 @@ break;
 			break;
 		case 11:
 			if (autoTimer.get() > 2.5) {
-				ballControl.set(1.0);
+				ballControl.set(ControlMode.PercentOutput, 1.0);
 			}
 			if (autoTimer.get() > 7.0) {
 				autoStep = 12;
@@ -3691,9 +3698,9 @@ break;
 			break;
 		case 12:
 
-			ballControl.set(0);
-			shooterA.set(0);
-			shooterB.set(0);
+			ballControl.set(ControlMode.PercentOutput, 0);
+			shooterA.set(ControlMode.PercentOutput, 0);
+			shooterB.set(ControlMode.PercentOutput, 0);
 			autoStep = 13;
 			driveRobot(0, 0);
 			break;
@@ -3724,7 +3731,7 @@ break;
 			case 2:
 				moveArmDown();
 				setShooterAngle(aimAngle);
-				collector.set(1.0);
+				collector.set(ControlMode.PercentOutput, 1.0);
 				overDefenses();
 				if (defenseStep == 5) {
 					autoStep = 3;
@@ -3732,13 +3739,13 @@ break;
 				}
 				break;
 			case 3:
-				collector.set(0.0);
+				collector.set(ControlMode.PercentOutput, 0.0);
 				if (distanceR.getRaw() > 15000) {
 					driveStraight.disable();
 	//				turnSum = 0;
 					autoStep = 4;
 					loopCount = 0;
-					arm.set(0);
+					arm.set(ControlMode.PercentOutput, 0);
 					autoTimer.reset();
 		//			driveRobot(0, 0);
 				}
@@ -3778,7 +3785,7 @@ break;
 						turnCount++;
 						if (turnCount > 7) {
 							autoStep = 7;
-							shootAngle.set(0);
+							shootAngle.set(ControlMode.PercentOutput, 0);
 							loopCount = 0;
 							autoTimer.reset();
 							distanceL.reset();
@@ -3791,15 +3798,15 @@ break;
 			case 7:
 				onSpeed = autoShooterSpeedControl();
 				if (onSpeed || autoTimer.get()>4.0) {
-	//			shooterA.set(0.87);
-	//			shooterB.set(-0.76);
+	//			shooterA.set(ControlMode.PercentOutput, 0.87);
+	//			shooterB.set(ControlMode.PercentOutput, -0.76);
 				autoStep = 8;
 				}
 				break;
 			case 8:
 				autoShooterSpeedControl();
 				if (autoTimer.get() > 2.5) {
-					ballControl.set(1.0);
+					ballControl.set(ControlMode.PercentOutput, 1.0);
 				}
 				if (autoTimer.get() > 7.0) {
 					autoStep = 9;
@@ -3808,9 +3815,9 @@ break;
 				break;
 			case 9:
 	
-				ballControl.set(0);
-				shooterA.set(0);
-				shooterB.set(0);
+				ballControl.set(ControlMode.PercentOutput, 0);
+				shooterA.set(ControlMode.PercentOutput, 0);
+				shooterB.set(ControlMode.PercentOutput, 0);
 				autoStep = 10;
 				driveRobot(0, 0);
 				break;
@@ -3840,7 +3847,7 @@ break;
 			case 2:
 				moveArmDown();
 	//			setShooterAngle(2.94);
-				collector.set(1.0);
+				collector.set(ControlMode.PercentOutput, 1.0);
 				overDefenses();
 				if (defenseStep == 5) {
 					autoStep = 3;
@@ -3848,13 +3855,13 @@ break;
 				}
 				break;
 			case 3:
-				collector.set(0.0);
+				collector.set(ControlMode.PercentOutput, 0.0);
 				if (distanceR.getRaw() > 7000) {
 					driveStraight.disable();
 					//				turnSum = 0;
 					autoStep = 4;
 					//				loopCount = 0;
-					arm.set(0);
+					arm.set(ControlMode.PercentOutput, 0);
 					autoTimer.reset();
 					driveRobot(0, 0);
 				}
@@ -3881,13 +3888,13 @@ break;
 			case 2:
 				moveArmDown();
 				setShooterAngle(aimAngle);
-				collector.set(1.0);
+				collector.set(ControlMode.PercentOutput, 1.0);
 				double power = loopCount * .05;
 				if (power > 0.5) {
 					driveStraight.setPID(.04, 0.00005, .03);
 					driveStraight.setSetpoint(0);
 					direction = 0.5;
-					shootAngle.set(0);
+					shootAngle.set(ControlMode.PercentOutput, 0);
 					driveStraight.enable();
 					autoStep = 3;
 				} else
@@ -3895,7 +3902,7 @@ break;
 				break;
 			case 3:
 				moveArmDown();
-				collector.set(1.0);
+				collector.set(ControlMode.PercentOutput, 1.0);
 				if (navX.getRoll() > 9) {
 					autoStep = 4;
 				}
@@ -3907,7 +3914,7 @@ break;
 				break;
 			case 4:
 	//			moveArmDown();
-				collector.set(1.0);
+				collector.set(ControlMode.PercentOutput, 1.0);
 				if (navX.getRoll() < -8) {
 					autoStep = 5;
 					direction = 0.35;
@@ -3920,14 +3927,14 @@ break;
 					minRoll = nowRoll;
 				break;
 			case 5:
-				arm.set(-1.0);
-				collector.set(1.0);
+				arm.set(ControlMode.PercentOutput, -1.0);
+				collector.set(ControlMode.PercentOutput, 1.0);
 				if (navX.getRoll() > rollOffset - 0.6) {
 					floorCount++;
 					if (floorCount == 1) {
 						driveStraight.disable();
 						driveRobot(0,0);
-						shootAngle.set(0);
+						shootAngle.set(ControlMode.PercentOutput, 0);
 						distanceL.reset();
 						distanceR.reset();
 						direction = 0.5;
@@ -3938,7 +3945,7 @@ break;
 				break;
 			
 			case 6:
-				collector.set(0);
+				collector.set(ControlMode.PercentOutput, 0);
 				if (autoTimer.get() > 1.0) {
 					autoStep = 7;
 					turnSum = 0.0;
@@ -3958,8 +3965,8 @@ break;
 						autoStep = 8;
 						loopCount = 0;
 						autoTimer.reset();
-						arm.set(0);
-						shootAngle.set(0);
+						arm.set(ControlMode.PercentOutput, 0);
+						shootAngle.set(ControlMode.PercentOutput, 0);
 					}
 				}
 			
@@ -3969,8 +3976,8 @@ break;
 				if (onSpeed || autoTimer.get() > 4.0) {
 					autoStep = 9;
 				}
-		//		shooterA.set(0.87);
-		//		shooterB.set(-0.76);
+		//		shooterA.set(ControlMode.PercentOutput, 0.87);
+		//		shooterB.set(ControlMode.PercentOutput, -0.76);
 		//		if (autoTimer.get() > 2.0) {
 		//			autoStep = 9;
 		//		}
@@ -3979,7 +3986,7 @@ break;
 			case 9:
 				autoShooterSpeedControl();
 				if (autoTimer.get() > 2.2) {
-				ballControl.set(1.0);
+				ballControl.set(ControlMode.PercentOutput, 1.0);
 				}
 				if (autoTimer.get() > 7.0) {
 					autoStep = 10;
@@ -3988,9 +3995,9 @@ break;
 				break;
 			case 10:
 	
-				ballControl.set(0);
-				shooterA.set(0);
-				shooterB.set(0);
+				ballControl.set(ControlMode.PercentOutput, 0);
+				shooterA.set(ControlMode.PercentOutput, 0);
+				shooterB.set(ControlMode.PercentOutput, 0);
 				autoStep = 11;
 				driveRobot(0, 0);
 				break;
@@ -4023,7 +4030,7 @@ break;
 			case 2:
 				moveArmDown();
 				setShooterAngle(aimAngle);
-				collector.set(1.0);
+				collector.set(ControlMode.PercentOutput, 1.0);
 				overDefenses();
 				if (defenseStep == 5) {
 					autoStep = 3;
@@ -4031,7 +4038,7 @@ break;
 				}
 				break;
 			case 3:
-				collector.set(0.0);
+				collector.set(ControlMode.PercentOutput, 0.0);
 				if (tapeSensor.get()) {
 					onTape++;
 					if (onTape == 4) {
@@ -4043,7 +4050,7 @@ break;
 	//				turnSum = 0;
 					autoStep = 4;
 					loopCount = 0;
-					arm.set(0);
+					arm.set(ControlMode.PercentOutput, 0);
 					autoTimer.reset();
 		//			driveRobot(0, 0);
 				}
@@ -4084,7 +4091,7 @@ break;
 						turnCount++;
 						if (turnCount > 7) {
 							autoStep = 7;
-							shootAngle.set(0);
+							shootAngle.set(ControlMode.PercentOutput, 0);
 							loopCount = 0;
 							autoTimer.reset();
 							distanceL.reset();
@@ -4099,8 +4106,8 @@ break;
 				if (backUpFromBatter(800)) {
 					autoStep = 8;
 				}			
-	//			shooterA.set(0.87);
-	//			shooterB.set(-0.76);
+	//			shooterA.set(ControlMode.PercentOutput, 0.87);
+	//			shooterB.set(ControlMode.PercentOutput, -0.76);
 				
 				
 				break;
@@ -4112,7 +4119,7 @@ break;
 				break;
 			case 9:
 				if (autoTimer.get() > 2.5) {
-					ballControl.set(1.0);
+					ballControl.set(ControlMode.PercentOutput, 1.0);
 				}
 				if (autoTimer.get() > 7.0) {
 					autoStep = 10;
@@ -4121,9 +4128,9 @@ break;
 				break;
 			case 10:
 	
-				ballControl.set(0);
-				shooterA.set(0);
-				shooterB.set(0);
+				ballControl.set(ControlMode.PercentOutput, 0);
+				shooterA.set(ControlMode.PercentOutput, 0);
+				shooterB.set(ControlMode.PercentOutput, 0);
 				autoStep = 11;
 				driveRobot(0, 0);
 				break;
