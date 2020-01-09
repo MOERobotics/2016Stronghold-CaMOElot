@@ -4,23 +4,13 @@ import java.net.SocketException;
 
 import com.kauailabs.navx.frc.AHRS;
 
-import edu.wpi.first.wpilibj.AnalogInput;
+import edu.wpi.first.wpilibj.*;
 
 import com.ctre.phoenix.motorcontrol.ControlMode;
 import com.ctre.phoenix.motorcontrol.NeutralMode;
 //import edu.wpi.first.wpilibj.SPI;
 import com.ctre.phoenix.motorcontrol.can.*;
-import edu.wpi.first.wpilibj.Counter;
 import edu.wpi.first.wpilibj.CounterBase.EncodingType;
-import edu.wpi.first.wpilibj.DigitalInput;
-import edu.wpi.first.wpilibj.Encoder;
-import edu.wpi.first.wpilibj.IterativeRobot;
-import edu.wpi.first.wpilibj.Joystick;
-import edu.wpi.first.wpilibj.PIDController;
-import edu.wpi.first.wpilibj.PIDOutput;
-import edu.wpi.first.wpilibj.SPI;
-import edu.wpi.first.wpilibj.Servo;
-import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.networktables.NetworkTable;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj.tables.ITable;
@@ -32,7 +22,7 @@ import edu.wpi.first.wpilibj.tables.ITable;
  * creating this project, you must also update the manifest file in the resource
  * directory.
  */
-public class Robot extends IterativeRobot implements PIDOutput {
+public class Robot extends TimedRobot implements PIDOutput {
 
 //	 CameraServer server;
 
@@ -222,16 +212,16 @@ public class Robot extends IterativeRobot implements PIDOutput {
 		SmartDashboard.putNumber("Moat", 0);
 
 		angleController = new PIDController(0.03, 0.0005, 0.5, navX, this);
-		angleController.setContinuous();
 		angleController.setInputRange(-180.0, 180.0);
 		angleController.setOutputRange(-0.6, 0.6);
 		angleController.setAbsoluteTolerance(1.0);
+		angleController.setContinuous();
 
 		driveStraight = new PIDController(0.04, 0.00005, 0.03, navX, this);
-		driveStraight.setContinuous();
 		driveStraight.setInputRange(-180.0, 180.0);
 		driveStraight.setOutputRange(-1.0, 1.0);
-		
+		driveStraight.setContinuous();
+
 		autoFileChoice=autoFile.readAutoFile();
 		
 		
@@ -407,6 +397,7 @@ public class Robot extends IterativeRobot implements PIDOutput {
 				speedSumB = 0;
 				startLoop = teleopLoop;
 				setSpeedA = desiredSpeedA;
+
 				setSpeedB = desiredSpeedB;
 				// setSpeedA = SmartDashboard.getNumber("desiredSpeedA");
 				// setSpeedB = SmartDashboard.getNumber("desiredSpeedB");
