@@ -11,9 +11,11 @@ import com.ctre.phoenix.motorcontrol.NeutralMode;
 //import edu.wpi.first.wpilibj.SPI;
 import com.ctre.phoenix.motorcontrol.can.*;
 import edu.wpi.first.wpilibj.CounterBase.EncodingType;
-import edu.wpi.first.wpilibj.networktables.NetworkTable;
+import edu.wpi.first.networktables.NetworkTableInstance;
+//import edu.wpi.first.wpilibj.networktables.NetworkTable;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
-import edu.wpi.first.wpilibj.tables.ITable;
+//import edu.wpi.first.wpilibj.tables.ITable;
+import edu.wpi.first.math.controller.PIDController;
 
 /**
  * The VM is configured to automatically run this class, and to call the
@@ -22,7 +24,8 @@ import edu.wpi.first.wpilibj.tables.ITable;
  * creating this project, you must also update the manifest file in the resource
  * directory.
  */
-public class Robot extends TimedRobot implements PIDOutput {
+//public class Robot extends TimedRobot implements PIDOutput {
+public class Robot extends TimedRobot {
 
 //	 CameraServer server;
 
@@ -66,7 +69,7 @@ public class Robot extends TimedRobot implements PIDOutput {
 	PIDController angleController;
 	PIDController driveStraight;
 	
-	NetworkTable table;
+	NetworkTableInstance table;
 
 	int disabledLoop;
 	int teleopLoop;
@@ -170,8 +173,8 @@ public class Robot extends TimedRobot implements PIDOutput {
 //		  server.setSize(1);
 //		  server.setQuality(50); 
 //		  server.startAutomaticCapture("cam1");
-		
-		table=NetworkTable.getTable("GRIP");
+
+		//table=NetworkTableInstance.getTable("GRIP");
 		 
 		navX = new AHRS(SPI.Port.kMXP, (byte) 50);
 	}
@@ -211,16 +214,23 @@ public class Robot extends TimedRobot implements PIDOutput {
 		SmartDashboard.putNumber("autoChoice", 0);
 		SmartDashboard.putNumber("Moat", 0);
 
-		angleController = new PIDController(0.03, 0.0005, 0.5, navX, this);
+		PIDController angleController = new PIDController(3.0e-2,5.0e-4,5.0e-1);
+		angleController.enableContinuousInput(-180,180);
+		angleController.setTolerance(0.6);
+
+		/*angleController = new PIDController(0.03, 0.0005, 0.5, navX, this);
 		angleController.setInputRange(-180.0, 180.0);
 		angleController.setOutputRange(-0.6, 0.6);
 		angleController.setAbsoluteTolerance(1.0);
-		angleController.setContinuous();
+		angleController.setContinuous();*/
 
-		driveStraight = new PIDController(0.04, 0.00005, 0.03, navX, this);
+		PIDController driveStraight = new PIDController(4.0e-2,5.0e-5,3.0e-2);
+		driveStraight.enableContinuousInput(-180,180);
+		driveStraight.setTolerance(1.0);
+		/*driveStraight = new PIDController(0.04, 0.00005, 0.03, navX, this);
 		driveStraight.setInputRange(-180.0, 180.0);
 		driveStraight.setOutputRange(-1.0, 1.0);
-		driveStraight.setContinuous();
+		driveStraight.setContinuous();*/
 
 		autoFileChoice=autoFile.readAutoFile();
 		
@@ -246,12 +256,12 @@ public class Robot extends TimedRobot implements PIDOutput {
 		arm.set(ControlMode.PercentOutput, 0);
 		// driveRobot(0,0);
 		collector.set(ControlMode.PercentOutput, 0);
-		if (angleController.isEnabled()) {
+		/*if (angleController.isEnabled()) {
 			angleController.disable();
 		}
 		if (driveStraight.isEnabled()) {
 			driveStraight.disable();
-		}
+		}*/
 	}
 
 	public void disabledPeriodic() {
@@ -361,7 +371,7 @@ public class Robot extends TimedRobot implements PIDOutput {
 		pastButton10D = false;
 		pastButton11D = false;
 		pastButton12D = false;
-		driveStraight.setOutputRange(-1.0, 1.0);
+		/*driveStraight.setOutputRange(-1.0, 1.0);*/
 		onTape = 0;
 	//	analyzePicture = true;
 	}
@@ -581,7 +591,7 @@ public class Robot extends TimedRobot implements PIDOutput {
 			}
 			if(analyzePicture) {
 
-				double deltaAngle = pictureAnalysis(138,82);
+				/*double deltaAngle = pictureAnalysis(138,82);
 				SmartDashboard.putNumber("deltaAngle",deltaAngle);
 				if (foundTarget) {
 					if (deltaAngle > 0) {
@@ -598,7 +608,7 @@ public class Robot extends TimedRobot implements PIDOutput {
 					turnToAngle = startYaw;
 					azTarget = startAzimuth;
 					
-				}
+				}*/
 			}
 			System.out.println(turnToAngle);
 			turnRobot(turnToAngle);
@@ -615,7 +625,7 @@ public class Robot extends TimedRobot implements PIDOutput {
 			}
 			if(analyzePicture) {
 
-				double deltaAngle = pictureAnalysis(146,105);
+				/*double deltaAngle = pictureAnalysis(146,105);
 				SmartDashboard.putNumber("deltaAngle",deltaAngle);
 				if (foundTarget) {
 					if (deltaAngle > 0) {
@@ -632,7 +642,7 @@ public class Robot extends TimedRobot implements PIDOutput {
 					turnToAngle = startYaw;
 					azTarget = startAzimuth;
 					
-				}
+				}*/
 			}
 			System.out.println(turnToAngle);
 			turnRobot(turnToAngle);
@@ -1211,7 +1221,7 @@ public class Robot extends TimedRobot implements PIDOutput {
 			}
 			else {
 				driveStraight.setSetpoint(startYaw);
-				driveStraight.enable();
+				/*driveStraight.enable();*/
 				defenseStep = 2;
 			}
 			break;
@@ -1244,8 +1254,8 @@ public class Robot extends TimedRobot implements PIDOutput {
 			break;
 		case 5:
 			if (!isAutonomous()) {
-				if (driveStraight.isEnabled())
-					driveStraight.disable();
+				/*if (driveStraight.isEnabled())
+					driveStraight.disable();*/
 				pidContOn = false;
 				driveRobot(0,0);
 			}
@@ -1348,11 +1358,11 @@ public class Robot extends TimedRobot implements PIDOutput {
 		}
 	}
 	
-	double pictureAnalysis(double xTarget,double yTarget)
+	/*double pictureAnalysis(double xTarget,double yTarget)
 	{
 		return AUTO_TARGETING_USE_UDP?udpAnalysis(xTarget,yTarget):gripAnalysis(xTarget,yTarget);
 		
-	}
+	}*/
 	
 	double udpAnalysis(double xTarget,double yTarget)//640x480
 	{
@@ -1382,7 +1392,7 @@ public class Robot extends TimedRobot implements PIDOutput {
 		return 0;
 	}
 	
-	double gripAnalysis(double xTarget, double yTarget)
+	/*double gripAnalysis(double xTarget, double yTarget)
 	{
 		ITable it=table.getSubTable("myContoursReport");
 		double []areas=it.getNumberArray("area", new double[]{-1});
@@ -1412,7 +1422,7 @@ public class Robot extends TimedRobot implements PIDOutput {
 		}
 		foundTarget = false;
 		return 0;
-	}
+	}*/
 	
 	public int getAuto()
 	{
@@ -1430,7 +1440,7 @@ public class Robot extends TimedRobot implements PIDOutput {
 			if (power > 0.5) {
 				driveStraight.setSetpoint(0);
 				direction = 0.5;
-				driveStraight.enable();
+				/*driveStraight.enable();*/
 				autoStep = 2;
 				distanceL.reset();
 				distanceR.reset();
@@ -1440,7 +1450,7 @@ public class Robot extends TimedRobot implements PIDOutput {
 		case 2:
 			if (distanceL.getRaw() > 4600.0) {
 				autoStep = 3;
-				driveStraight.disable();
+				/*driveStraight.disable();*/
 				loopCount = 0;
 				driveRobot(0, 0);
 				autoTimer.reset();
@@ -1452,12 +1462,12 @@ public class Robot extends TimedRobot implements PIDOutput {
 		case 3:
 			if (autoTimer.get() > 0.5) {
 				if(analyzePicture) {
-					double deltaAngle = pictureAnalysis(aimPixels,shooterPixels);
+					/*double deltaAngle = pictureAnalysis(aimPixels,shooterPixels);
 					if (foundTarget) {
 						if (deltaAngle > 0) turnToAngle = navX.getYaw() + deltaAngle + 0.5;
 						else turnToAngle = navX.getYaw() + deltaAngle - 0.5;
 					}
-					else turnToAngle = navX.getYaw();
+					else turnToAngle = navX.getYaw();*/
 				}
 
 				if(turnRobot(turnToAngle))
@@ -1472,10 +1482,10 @@ public class Robot extends TimedRobot implements PIDOutput {
 			}
 				break;
 		case 4:
-			if (angleController.onTarget()) {
+			/*if (angleController.onTarget()) {
 				autoStep = 5;
 				angleController.disable();
-			}
+			}*/
 			break;
 		case 5:
 			driveRobot(0, 0);
@@ -1508,7 +1518,7 @@ public class Robot extends TimedRobot implements PIDOutput {
 				driveStraight.setSetpoint(0);
 				direction = 0.5;
 				shootAngle.set(ControlMode.PercentOutput, 0);
-				driveStraight.enable();
+				/*driveStraight.enable();*/
 				autoStep = 3;
 			} else
 				driveRobot(power, power);
@@ -1557,7 +1567,7 @@ public class Robot extends TimedRobot implements PIDOutput {
 			else	arm.set(ControlMode.PercentOutput, -1);
 			collector.set(ControlMode.PercentOutput, 0);
 			if (distanceR.getRaw() > 9700) {
-				driveStraight.disable();
+				/*driveStraight.disable();*/
 				turnSum = 0;
 				lastOffYaw = 0;
 				autoTimer.reset();
@@ -1630,7 +1640,7 @@ public class Robot extends TimedRobot implements PIDOutput {
 		case 12:
 			if (autoTimer.get() > 1.0) {
 				if(analyzePicture) {
-					double deltaAngle = pictureAnalysis(aimPixels,shooterPixels);
+					/*double deltaAngle = pictureAnalysis(aimPixels,shooterPixels);
 					if (foundTarget) {
 						if (deltaAngle > 0) turnToAngle = navX.getYaw() - deltaAngle + 0.75;
 						else turnToAngle = navX.getYaw() - deltaAngle - 0.75;
@@ -1640,7 +1650,7 @@ public class Robot extends TimedRobot implements PIDOutput {
 						turnToAngle = navX.getYaw();
 						azTarget = launchAngle.getAverageVoltage();
 					}
-					analyzePicture = false;
+					analyzePicture = false;*/
 				}
 
 				else {
@@ -1696,7 +1706,7 @@ public class Robot extends TimedRobot implements PIDOutput {
 		case 3:
 			collector.set(ControlMode.PercentOutput, 0.0);
 			if (distanceR.getRaw() > 12850) {
-				driveStraight.disable();
+				/*driveStraight.disable();*/
 				turnSum = 0;
 				lastOffYaw = 0;
 				autoStep = 4;
@@ -1763,7 +1773,7 @@ break;
 		case 9:
 			if (autoTimer.get() > 1.0) {
 				if(analyzePicture) {
-					double deltaAngle = pictureAnalysis(aimPixels,shooterPixels);
+					/*double deltaAngle = pictureAnalysis(aimPixels,shooterPixels);
 					if (foundTarget) {
 						if (deltaAngle > 0) turnToAngle = navX.getYaw() - deltaAngle + 0.75;
 						else turnToAngle = navX.getYaw() - deltaAngle - 0.75;
@@ -1773,7 +1783,7 @@ break;
 						turnToAngle = navX.getYaw();
 						azTarget = launchAngle.getAverageVoltage();
 					}
-					analyzePicture = false;
+					analyzePicture = false;*/
 				}
 
 				else {
@@ -1833,7 +1843,7 @@ break;
 		case 3:
 			collector.set(ControlMode.PercentOutput, 0.0);
 			if (distanceR.getRaw() > 6600) {
-				driveStraight.disable();
+				/*driveStraight.disable();*/
 				turnSum = 0;
 				lastOffYaw = 0;
 				autoStep = 4;
@@ -1900,7 +1910,7 @@ break;
 		case 9:
 			if (autoTimer.get() > 1.0) {
 				if(analyzePicture) {
-					double deltaAngle = pictureAnalysis(aimPixels,shooterPixels);
+					/*double deltaAngle = pictureAnalysis(aimPixels,shooterPixels);
 					if (foundTarget) {
 						if (deltaAngle > 0) turnToAngle = navX.getYaw() - deltaAngle + 0.75;
 						else turnToAngle = navX.getYaw() - deltaAngle - 0.75;
@@ -1910,7 +1920,7 @@ break;
 						turnToAngle = navX.getYaw();
 						azTarget = launchAngle.getAverageVoltage();
 					}
-					analyzePicture = false;
+					analyzePicture = false;*/
 				}
 				else {
 					setShooterAngle(azTarget);
@@ -1951,7 +1961,7 @@ break;
 			if (power > 0.6) {
 				driveStraight.setPID(.04, 0.00005, .03);
 				driveStraight.setSetpoint(0);				
-				driveStraight.enable();
+				/*driveStraight.enable();*/
 				shootAngle.set(ControlMode.PercentOutput, 0);
 				autoStep = 3;
 			} else
@@ -1990,7 +2000,7 @@ break;
 			if (navX.getRoll() > rollOffset - 0.7) {
 				floorCount++;
 				if (floorCount == 1) {
-					driveStraight.disable();
+					/*driveStraight.disable();*/
 					turnSum = 0;
 					lastOffYaw = 0;
 					autoStep = 6;
@@ -2020,7 +2030,7 @@ break;
 						distanceR.reset();
 						direction = 0.5;
 						driveStraight.setSetpoint(25.0);
-						driveStraight.enable();
+						/*driveStraight.enable();*/
 						shootAngle.set(ControlMode.PercentOutput, 0);
 					}
 				}
@@ -2029,7 +2039,7 @@ break;
 			break;
 		case 7:
 			if (distanceR.getRaw() > 10000) {
-				driveStraight.disable();
+				/*driveStraight.disable();*/
 				turnSum = 0;
 				lastOffYaw = 0;
 				autoStep = 8;
@@ -2123,7 +2133,7 @@ break;
 		case 3:
 			collector.set(ControlMode.PercentOutput, 0.0);
 			if (distanceR.getRaw() > 8400) {
-				driveStraight.disable();
+				/*driveStraight.disable();*/
 				turnSum = 0;
 				lastOffYaw = 0;
 				autoStep = 4;
@@ -2192,7 +2202,7 @@ break;
 		case 9:
 			if (autoTimer.get() > 1.0) {
 				if(analyzePicture) {
-					double deltaAngle = pictureAnalysis(aimPixels,shooterPixels);
+					/*double deltaAngle = pictureAnalysis(aimPixels,shooterPixels);
 					if (foundTarget) {
 						if (deltaAngle > 0) turnToAngle = navX.getYaw() - deltaAngle + 0.75;
 						else turnToAngle = navX.getYaw() - deltaAngle - 0.75;
@@ -2202,7 +2212,7 @@ break;
 						turnToAngle = navX.getYaw();
 						azTarget = launchAngle.getAverageVoltage();
 					}
-					analyzePicture = false;
+					analyzePicture = false;*/
 				}
 
 				else {
@@ -2260,7 +2270,7 @@ break;
 		case 3:
 			collector.set(ControlMode.PercentOutput, 0.0);
 			if (distanceR.getRaw() > 14900) {
-				driveStraight.disable();
+				/*driveStraight.disable();*/
 				turnSum = 0;
 				lastOffYaw = 0;
 				autoStep = 4;
@@ -2327,7 +2337,7 @@ break;
 		case 9:
 			if (autoTimer.get() > 1.0) {
 				if(analyzePicture) {
-					double deltaAngle = pictureAnalysis(aimPixels,shooterPixels);
+					/*double deltaAngle = pictureAnalysis(aimPixels,shooterPixels);
 					if (foundTarget) {
 						if (deltaAngle > 0) turnToAngle = navX.getYaw() - deltaAngle + 0.75;
 						else turnToAngle = navX.getYaw() - deltaAngle - 0.75;
@@ -2337,7 +2347,7 @@ break;
 						turnToAngle = navX.getYaw();
 						azTarget = launchAngle.getAverageVoltage();
 					}
-					analyzePicture = false;
+					analyzePicture = false;*/
 				}
 
 				else {
@@ -2378,7 +2388,7 @@ break;
 				driveStraight.setPID(.04, 0.00005, .03);
 				driveStraight.setSetpoint(0);
 				direction = 0.5;
-				driveStraight.enable();
+				/*driveStraight.enable();*/
 				autoStep = 3;
 			} else
 				driveRobot(power, power);
@@ -2425,7 +2435,7 @@ break;
 			// moveArmUp(armCheval);
 			collector.set(ControlMode.PercentOutput, 0);
 			if (distanceR.getRaw() > 10000) {
-				driveStraight.disable();
+				/*driveStraight.disable();*/
 				turnSum = 0;
 				lastOffYaw = 0;
 				autoStep = 7;
@@ -2452,7 +2462,7 @@ break;
 						driveStraight.setPID(.04, 0.00005, .03);
 						driveStraight.setSetpoint(0);
 						direction = -0.7;
-						driveStraight.enable();
+						/*driveStraight.enable();*/
 						loopCount = 0;
 						arm.set(ControlMode.PercentOutput, 0);
 						autoTimer.reset();
@@ -2466,7 +2476,7 @@ break;
 			if (distanceR.getRaw() < -15000) {
 				autoStep = 10;
 				loopCount = 0;
-				driveStraight.disable();
+				/*driveStraight.disable();*/
 				driveRobot(0, 0);
 				// distanceR.reset();
 				// distanceL.reset();
@@ -2533,7 +2543,7 @@ break;
 		case 3:
 			collector.set(ControlMode.PercentOutput, 0.0);
 			if (distanceR.getRaw() > 15000) {
-				driveStraight.disable();
+				/*driveStraight.disable();*/
 //				turnSum = 0;
 				autoStep = 4;
 				loopCount = 0;
@@ -2647,7 +2657,7 @@ break;
 		case 3:
 			collector.set(ControlMode.PercentOutput, 0.0);
 			if (distanceR.getRaw() > 15000) {
-				driveStraight.disable();
+				/*driveStraight.disable();*/
 //				turnSum = 0;
 				autoStep = 4;
 				loopCount = 0;
@@ -2752,7 +2762,7 @@ break;
 				driveStraight.setSetpoint(0);
 				direction = 0.5;
 				shootAngle.set(ControlMode.PercentOutput, 0);
-				driveStraight.enable();
+				/*driveStraight.enable();*/
 				autoStep = 3;
 			} else
 				driveRobot(power, power);
@@ -2799,7 +2809,7 @@ break;
 			moveArmUp(3.0);
 			collector.set(ControlMode.PercentOutput, 0);
 			if (distanceR.getRaw() > 10000) {
-				driveStraight.disable();
+				/*driveStraight.disable();*/
 				turnSum = 0;
 				autoStep = 7;
 				loopCount = 0;
@@ -2844,7 +2854,7 @@ break;
 		case 3:
 			collector.set(ControlMode.PercentOutput, 0.0);
 			if (distanceR.getRaw() > 7000) {
-				driveStraight.disable();
+				/*driveStraight.disable();*/
 				//				turnSum = 0;
 				autoStep = 4;
 				//				loopCount = 0;
@@ -2876,7 +2886,7 @@ break;
 				driveStraight.setPID(.04, 0.00005, .03);
 				driveStraight.setSetpoint(0);
 				direction = 0.6;
-				driveStraight.enable();
+				/*driveStraight.enable();*/
 				autoStep = 3;
 			} else
 				driveRobot(power, power);
@@ -2924,7 +2934,7 @@ break;
 		case 6:
 			collector.set(ControlMode.PercentOutput, 0.0);
 			if (distanceR.getRaw() > 13500) {
-				driveStraight.disable();
+				/*driveStraight.disable();*/
 				turnSum = 0;
 				lastOffYaw = 0;
 				autoStep = 7;
@@ -3003,7 +3013,7 @@ break;
 				driveStraight.setPID(.04, 0.00005, .03);
 				driveStraight.setSetpoint(0);
 				direction = 0.6;
-				driveStraight.enable();
+				/*driveStraight.enable();*/
 				autoStep = 3;
 			} else
 				driveRobot(power, power);
@@ -3051,7 +3061,7 @@ break;
 		case 6:
 			collector.set(ControlMode.PercentOutput, 0.0);
 			if (distanceR.getRaw() > 15600) {
-				driveStraight.disable();
+				/*driveStraight.disable();*/
 				turnSum = 0;
 				lastOffYaw = 0;
 				autoStep = 7;
@@ -3134,7 +3144,7 @@ break;
 				driveStraight.setPID(.04, 0.00005, .03);
 				driveStraight.setSetpoint(0);
 				direction = 0.6;
-				driveStraight.enable();
+				/*driveStraight.enable();*/
 				autoStep = 3;
 				shootAngle.set(ControlMode.PercentOutput, 0);
 			} else
@@ -3183,7 +3193,7 @@ break;
 		case 6:
 			collector.set(ControlMode.PercentOutput, 0.0);
 			if (distanceR.getRaw() > 12850) {
-				driveStraight.disable();
+				/*driveStraight.disable();*/
 				turnSum = 0;
 				lastOffYaw = 0;
 				autoStep = 7;
@@ -3267,7 +3277,7 @@ break;
 					driveStraight.setPID(.04, 0.00005, .03);
 					driveStraight.setSetpoint(0);
 					direction = 0.6;
-					driveStraight.enable();
+					/*driveStraight.enable();*/
 					autoStep = 3;
 					shootAngle.set(ControlMode.PercentOutput, 0);
 				} else
@@ -3316,7 +3326,7 @@ break;
 			case 6:
 				collector.set(ControlMode.PercentOutput, 0.0);
 				if (distanceR.getRaw() > 15700) {
-					driveStraight.disable();
+					/*driveStraight.disable();*/
 					turnSum = 0;
 					lastOffYaw = 0;
 					autoStep = 7;
@@ -3415,7 +3425,7 @@ break;
 			collector.set(ControlMode.PercentOutput, 1.0);
 			overDefenses();
 			if (defenseStep == 5) {
-				driveStraight.disable();
+				/*driveStraight.disable();*/
 				turnSum = 0;
 				lastOffYaw = 0;
 				driveRobot(0,0);
@@ -3489,13 +3499,13 @@ break;
 				distanceL.reset();
 				distanceR.reset();
 				direction = 0.4;
-				driveStraight.enable();
+				/*driveStraight.enable();*/
 				
 			}
 			break;
 		case 8:
 			if (distanceR.getRaw() > 2700) {
-				driveStraight.disable();
+				/*driveStraight.disable();*/
 				driveRobot(0,0);
 				autoStep = 9;
 				turnSum = 0;
@@ -3527,7 +3537,7 @@ break;
 		case 11:
 			overDefenses();
 			if (defenseStep == 5) {
-				driveStraight.disable();				
+				/*driveStraight.disable();*/
 				driveRobot(0,0);				
 				autoStep = 12;
 				collector.set(ControlMode.PercentOutput, 0.0);
@@ -3569,7 +3579,7 @@ break;
 				driveStraight.setSetpoint(0);
 				direction = 0.5;
 				shootAngle.set(ControlMode.PercentOutput, 0);
-				driveStraight.enable();
+				/*driveStraight.enable();*/
 				autoStep = 3;
 			} else
 				driveRobot(power, power);
@@ -3618,7 +3628,7 @@ break;
 			else	arm.set(ControlMode.PercentOutput, -1);
 			collector.set(ControlMode.PercentOutput, 0);
 			if (distanceR.getRaw() > 15000) {
-				driveStraight.disable();
+				/*driveStraight.disable();*/
 				turnSum = 0;
 				autoTimer.reset();
 				arm.set(ControlMode.PercentOutput, 0);
@@ -3732,7 +3742,7 @@ break;
 			case 3:
 				collector.set(ControlMode.PercentOutput, 0.0);
 				if (distanceR.getRaw() > 15000) {
-					driveStraight.disable();
+					/*driveStraight.disable();*/
 	//				turnSum = 0;
 					autoStep = 4;
 					loopCount = 0;
@@ -3848,7 +3858,7 @@ break;
 			case 3:
 				collector.set(ControlMode.PercentOutput, 0.0);
 				if (distanceR.getRaw() > 7000) {
-					driveStraight.disable();
+					/*driveStraight.disable();*/
 					//				turnSum = 0;
 					autoStep = 4;
 					//				loopCount = 0;
@@ -3886,7 +3896,7 @@ break;
 					driveStraight.setSetpoint(0);
 					direction = 0.5;
 					shootAngle.set(ControlMode.PercentOutput, 0);
-					driveStraight.enable();
+					/*driveStraight.enable();*/
 					autoStep = 3;
 				} else
 					driveRobot(power, power);
@@ -3923,7 +3933,7 @@ break;
 				if (navX.getRoll() > rollOffset - 0.6) {
 					floorCount++;
 					if (floorCount == 1) {
-						driveStraight.disable();
+						/*driveStraight.disable();*/
 						driveRobot(0,0);
 						shootAngle.set(ControlMode.PercentOutput, 0);
 						distanceL.reset();
@@ -4037,7 +4047,7 @@ break;
 					}
 				}
 				if (distanceR.getRaw() > 15000) {
-					driveStraight.disable();
+					/*driveStraight.disable();*/
 	//				turnSum = 0;
 					autoStep = 4;
 					loopCount = 0;
