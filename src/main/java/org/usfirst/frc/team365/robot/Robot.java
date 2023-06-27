@@ -190,8 +190,8 @@ public class Robot extends TimedRobot {
 		driveRC.setInverted(true);
 		
 
-		shooterA.setInverted(true);
-		shooterB.setInverted(true);
+		shooterA.setInverted(false);
+		shooterB.setInverted(false);
 
 		driveLA.setNeutralMode(NeutralMode.Brake);
 		driveLB.setNeutralMode(NeutralMode.Brake);
